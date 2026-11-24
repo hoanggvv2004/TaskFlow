@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% load ui_tags %}
+{% block title %}Settings · {{ project.name }}{% endblock %}
+{% block content %}
+{% include "components/project_header.html" %}
+{% if can_settings or can_manage %}
+<div class="row g-3" data-stagger>
+  <div class="col-lg-7">
+    <div class="tf-card mb-3">
+      <div class="tf-card-head"><h2 class="section-title"><i class="bi bi-gear"></i>Thông tin chung</h2>{% if can_manage %}<a class="btn btn-primary btn-sm" href="{% url 'projects:edit' project.id %}"><i class="bi bi-pencil"></i> Cập nhật dự án</a>{% endif %}</div>
+      <div class="tf-card-body">
+        <div class="kv"><span>Tên dự án</span><strong>{{ project.name }}</strong></div>
+        <div class="kv"><span>Mã</span><strong class="code-tag">{{ project.code }}</strong></div>
+        <div class="kv"><span>Danh mục</span><strong>{{ project.category|default:"—" }}</strong></div>
+        <div class="kv"><span>Trạng thái</span><span class="{{ project.status.slug|badge_class }} badge-dot">{{ project.status.name }}</span></div>
+        <div class="kv"><span>Ưu tiên</span><span class="{{ project.priority.slug|badge_class }}">{{ project.priority.name }}</span></div>
+        <div class="kv"><span>Thời gian</span><strong>{{ project.start_date|date:"d/m/Y" }} → {{ project.end_date|date:"d/m/Y" }}</strong></div>
+        <div class="kv"><span>Owner</span><strong class="d-flex align-items-center gap-2">{% user_avatar project.owner 22 %}{{ project.owner.get_display_name }}</strong></div>
+      </div>
+    </div>
+    {% if can_manage %}
+    <div class="tf-card">
+      <div class="tf-card-body">
+        <h2 class="h6">Luồng công việc</h2>
+        <p class="text-muted">Chọn các cột Kanban, vai trò được chuyển trạng thái và các loại công việc của dự án.</p>
+        <a class="btn btn-outline-primary" href="{% url 'projects:workflow' project.id %}"><i class="bi bi-diagram-3"></i> Cấu hình luồng công việc</a>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  <div class="col-lg-5">
+    {% if can_settings %}
+    {% if can_manage and members.count > 1 %}
+    <form class="tf-card mb-3" method="post" action="{% url 'projects:transfer_owner' project.id %}">
+      {% csrf_token %}
+      <div class="tf-card-head"><h2 class="section-title"><i class="bi bi-arrow-left-right"></i>Chuyển quyền Owner</h2></div>
+      <div class="tf-card-body">
+        <p class="fs-13 text-muted">Owner mới sẽ có toàn quyền với dự án. Bạn sẽ trở thành Project Manager.</p>
+        <select class="form-select mb-3" name="member_id">
+          {% for m in members %}{% if m.role != 'OWNER' %}<option value="{{ m.id }}">{{ m.user.get_display_name }} · {{ m.get_role_display }}</option>{% endif %}{% endfor %}
+        </select>
+        <button class="btn btn-outline-primary w-100" data-confirm="Chuyển quyền sở hữu dự án?" data-confirm-text="Hành động này không thể tự hoàn tác."><i class="bi bi-arrow-left-right"></i> Chuyển quyền</button>
+      </div>
+    </form>
+    {% endif %}
+    <div class="tf-card" style="border-color:#fecaca">
+      <div class="tf-card-head"><h2 class="section-title"><i class="bi bi-archive"></i>Vòng đời dự án</h2></div>
+      <div class="tf-card-body">
+        {% if project.archived_at %}
+        <p class="fs-13 text-muted">Đã lưu trữ ngày {{ project.archived_at|date:"d/m/Y" }}. Thành viên vẫn xem được công việc, tài liệu và lịch sử.</p>
+        <form method="post" action="{% url 'projects:restore' project.id %}">
+          {% csrf_token %}
+          <button class="btn btn-outline-primary w-100" type="submit"><i class="bi bi-arrow-counterclockwise"></i> Kích hoạt lại</button>
+        </form>
+        {% else %}
+        <p class="fs-13 text-muted">Lưu trữ chuyển dự án sang chế độ chỉ xem và giữ lịch sử, công việc, tài liệu.</p>
+        <form method="post" action="{% url 'projects:archive' project.id %}">
+          {% csrf_token %}
+          <button class="btn btn-outline-primary w-100" data-confirm="Lưu trữ dự án này?" data-confirm-text="Dự án sẽ chuyển sang chế độ chỉ xem."><i class="bi bi-archive"></i> Lưu trữ dự án</button>
+        </form>
+        {% endif %}
+        {% if has_work %}
+        <p class="small text-muted mb-0 mt-3">Dự án đã phát sinh công việc hoặc tài liệu nên chỉ có thể lưu trữ.</p>
+        {% else %}
+        <form class="mt-3 border-top pt-3" method="post" action="{% url 'projects:delete' project.id %}">
+          {% csrf_token %}
+          <label class="form-label" for="deleteProjectCode">Nhập <strong>{{ project.code }}</strong> để xác nhận xóa dự án trống</label>
+          <input class="form-control mb-2" id="deleteProjectCode" name="code" required autocomplete="off">
+          <button class="btn btn-outline-danger" type="submit"><i class="bi bi-trash"></i> Xóa dự án trống</button>
+        </form>
+        {% endif %}
+      </div>
+    </div>
+    {% else %}
+    <div class="alert alert-light mb-0"><i class="bi bi-info-circle me-1"></i>Chỉ Owner hoặc Admin mới chuyển quyền sở hữu hoặc lưu trữ dự án.</div>
+    {% endif %}
+  </div>
+</div>
+{% else %}
+  <div class="alert alert-light"><i class="bi bi-lock me-1"></i>Bạn chỉ có quyền xem cài đặt dự án.</div>
+{% endif %}
+{% endblock %}

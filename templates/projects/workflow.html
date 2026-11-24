@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Luồng công việc · {{ project.name }}{% endblock %}
+{% block content %}
+{% include "components/project_header.html" %}
+<h2 class="h4 mb-3">Luồng công việc và phân loại</h2>
+<div class="row g-3 align-items-start">
+  <div class="col-lg-8">
+    <form method="post" class="tf-card" id="workflowForm">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="workflow">
+      <div class="tf-card-body">
+        <div class="mb-3">
+          {{ form.initial.label_tag }} {{ form.initial }} {{ form.initial.errors }}
+        </div>
+        <div class="mb-3">
+          <p class="form-label mb-1">{{ form.statuses.label }}</p>
+          <div class="d-flex flex-wrap column-gap-3 row-gap-1">
+            {% for status in form.statuses %}<div>{{ status }}</div>{% endfor %}
+          </div>
+          {{ form.statuses.errors }}
+        </div>
+        <h3 class="h6 mt-4">Luật chuyển</h3>
+        <p class="text-muted small">Người được giao nộp kết quả vào cột Chờ duyệt. Owner, Manager hoặc Admin quyết định duyệt, từ chối hoặc yêu cầu làm lại.</p>
+        {{ form.non_field_errors }}
+        {{ rules.management_form }}
+        {{ rules.non_form_errors }}
+        <div class="table-responsive workflow-rules">
+          <table class="table table-sm align-middle">
+            <thead><tr><th scope="col">Từ</th><th scope="col">Đến</th><th scope="col">Ai được chuyển</th><th scope="col">Bỏ luật</th></tr></thead>
+            <tbody id="transitionRows">
+              {% for rule in rules %}{% include "projects/workflow_rule.html" %}{% endfor %}
+            </tbody>
+          </table>
+        </div>
+        <template id="transitionTemplate">{% include "projects/workflow_rule.html" with rule=rules.empty_form %}</template>
+        <div class="d-flex flex-wrap gap-2 justify-content-between">
+          <button type="button" id="addTransition" class="btn btn-light"><i class="bi bi-plus-lg"></i> Thêm luật</button>
+          <button type="submit" class="btn btn-primary">Lưu luồng công việc</button>
+        </div>
+      </div>
+    </form>
+  </div>
+  <div class="col-lg-4">
+    <form method="post" class="tf-card mb-3" id="task-statuses">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="status">
+      {% if edit_status %}<input type="hidden" name="status_id" value="{{ edit_status.pk }}">{% endif %}
+      <div class="tf-card-body">
+        <h3 class="h6">{% if edit_status %}Sửa cột trạng thái{% else %}Tạo cột trạng thái{% endif %}</h3>
+        <p class="text-muted small">Giai đoạn dùng để kiểm tra quyền chuyển và tính báo cáo.</p>
+        {% for field in status_form %}
+          <div class="mb-2">{{ field.label_tag }} {{ field }} {{ field.errors }}</div>
+        {% endfor %}
+        <button type="submit" class="btn btn-outline-primary mt-2">{% if edit_status %}Lưu cột{% else %}Tạo cột{% endif %}</button>
+        {% if edit_status %}<a class="btn btn-light mt-2" href="{% url 'projects:workflow' project.pk %}#task-statuses">Hủy</a>{% endif %}
+        {% if custom_statuses %}
+          <ul class="list-unstyled mb-0 mt-3">
+            {% for status in custom_statuses %}
+            <li class="border-top py-2"><a href="?status={{ status.pk }}#task-statuses">{{ status.name }}</a> <small class="text-muted">· {{ status.get_stage_display }}</small></li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      </div>
+    </form>
+    <div class="tf-card" id="task-types">
+      <div class="tf-card-body">
+        <h3 class="h6">Loại công việc</h3>
+        <form method="post" class="mb-3">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="type">
+          {% if edit_type %}<input type="hidden" name="type_id" value="{{ edit_type.pk }}">{% endif %}
+          {{ type_form.name.label_tag }} {{ type_form.name }} {{ type_form.name.errors }}
+          <button type="submit" class="btn btn-outline-primary mt-2">{% if edit_type %}Lưu tên{% else %}Thêm loại{% endif %}</button>
+          {% if edit_type %}<a class="btn btn-light mt-2" href="{% url 'projects:workflow' project.pk %}#task-types">Hủy</a>{% endif %}
+        </form>
+        {% for task_type in task_types %}
+          <form method="post" class="d-flex align-items-center justify-content-between gap-2 border-top py-2">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="toggle_type">
+            <input type="hidden" name="type_id" value="{{ task_type.pk }}">
+            <input type="hidden" name="active" value="{{ task_type.is_active|yesno:'0,1' }}">
+            <span><a href="?type={{ task_type.pk }}#task-types">{{ task_type.name }}</a> {% if not task_type.is_active %}<small class="text-muted">(ngừng dùng)</small>{% endif %}</span>
+            <button type="submit" class="btn btn-sm btn-light">{{ task_type.is_active|yesno:"Ngừng dùng,Dùng lại" }}</button>
+          </form>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/workflow.js' %}"></script>{% endblock %}
