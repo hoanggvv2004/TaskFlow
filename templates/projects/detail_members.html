@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% load ui_tags %}
+{% block title %}Members · {{ project.name }}{% endblock %}
+{% block content %}
+{% include "components/project_header.html" %}
+<div class="row g-3">
+  <div class="col-lg-8">
+    <form class="filter-bar" method="get">
+      <div class="search"><i class="bi bi-search"></i><input class="form-control" name="q" value="{{ query }}" placeholder="Tìm thành viên theo tên, email..."></div>
+      <button class="btn btn-light"><i class="bi bi-search"></i> Tìm</button>
+      <span class="ms-auto text-muted fs-13">{{ filtered_members.count }} thành viên</span>
+    </form>
+    <div data-stagger>
+    {% for m in filtered_members %}
+      <div class="tf-card member-card mb-2 hover-lift">
+        {% user_avatar m.user 42 %}
+        <div class="info">
+          <strong><a href="{{ m.user.get_absolute_url }}">{{ m.user.get_display_name }}</a></strong>
+          <span>{{ m.user.job_title|default:m.user.email }} · tham gia {{ m.joined_at|date:"d/m/Y" }}</span>
+        </div>
+        {% if can_manage %}
+          <div class="d-flex gap-2 align-items-center">
+            {% if m.role == 'OWNER' %}
+              <span class="role-pill role-OWNER"><i class="bi bi-star-fill me-1"></i>Project Owner</span>
+            {% else %}
+            <form method="post" action="{% url 'projects:member_role' project.id m.id %}">
+              {% csrf_token %}
+              <select class="form-select form-select-sm" name="role" onchange="this.form.submit()" style="min-width:150px">
+                <option value="MANAGER" {% if m.role == 'MANAGER' %}selected{% endif %}>Project Manager</option>
+                <option value="MEMBER" {% if m.role == 'MEMBER' %}selected{% endif %}>Member</option>
+                <option value="VIEWER" {% if m.role == 'VIEWER' %}selected{% endif %}>Viewer</option>
+              </select>
+            </form>
+            <form method="post" action="{% url 'projects:member_remove' project.id m.id %}">
+              {% csrf_token %}
+              <button class="btn btn-outline-danger btn-sm btn-icon" title="Xóa khỏi dự án" data-confirm="Xóa {{ m.user.get_display_name }} khỏi dự án?" data-confirm-text="Các task đã giao sẽ được giữ lại nhưng người này không còn truy cập dự án."><i class="bi bi-person-dash"></i></button>
+            </form>
+            {% endif %}
+          </div>
+        {% else %}
+          <span class="role-pill role-{{ m.role }}">{{ m.get_role_display }}</span>
+        {% endif %}
+      </div>
+    {% empty %}
+      {% include "components/empty.html" with icon="bi-people" title="Không tìm thấy thành viên" text="Thử từ khóa khác hoặc thêm thành viên mới." %}
+    {% endfor %}
+    </div>
+  </div>
+  <div class="col-lg-4">
+    {% if can_manage %}
+    <form class="tf-card" method="post" action="{% url 'projects:member_add' project.id %}">
+      {% csrf_token %}
+      <div class="tf-card-head"><h2 class="section-title"><i class="bi bi-person-plus"></i>Add Member</h2></div>
+      <div class="tf-card-body">
+        {% for field in form %}
+          <div class="mb-3"><label class="form-label">{{ field.label }}</label>{{ field }}</div>
+        {% endfor %}
+        <button class="btn btn-primary w-100"><i class="bi bi-plus-lg"></i> Thêm vào dự án</button>
+        {% if project.department %}<div class="form-text mt-2">Danh sách hiển thị nhân sự đang hoạt động thuộc {{ project.department.name }}.</div>{% endif %}
+      </div>
+    </form>
+    {% else %}
+    <div class="tf-card">
+      <div class="tf-card-head"><h2 class="section-title"><i class="bi bi-shield"></i>Vai trò trong dự án</h2></div>
+      <div class="tf-card-body fs-13" style="color:var(--text-2)">
+        <div class="kv"><span>Project Owner</span><strong>Toàn quyền</strong></div>
+        <div class="kv"><span>Project Manager</span><strong>Quản lý task & thành viên</strong></div>
+        <div class="kv"><span>Member</span><strong>Cập nhật task được giao</strong></div>
+        <div class="kv"><span>Viewer</span><strong>Chỉ xem</strong></div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

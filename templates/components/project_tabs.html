@@ -1,0 +1,10 @@
+<nav class="tf-tabs">
+  <a class="{% if tab == 'overview' %}active{% endif %}" href="{% url 'projects:detail' project.id %}"><i class="bi bi-grid-1x2"></i> Overview</a>
+  <a class="{% if tab == 'tasks' %}active{% endif %}" href="{% url 'projects:tasks' project.id %}"><i class="bi bi-list-check"></i> Tasks</a>
+  <a class="{% if tab == 'kanban' %}active{% endif %}" href="{% url 'projects:kanban' project.id %}"><i class="bi bi-kanban"></i> Kanban</a>
+  <a class="{% if tab == 'members' %}active{% endif %}" href="{% url 'projects:members' project.id %}"><i class="bi bi-people"></i> Members</a>
+  <a class="{% if tab == 'documents' %}active{% endif %}" href="{% url 'projects:documents' project.id %}"><i class="bi bi-file-earmark-text"></i> Documents</a>
+  <a class="{% if tab == 'activity' %}active{% endif %}" href="{% url 'projects:activity' project.id %}"><i class="bi bi-activity"></i> Activity</a>
+  <a class="{% if tab == 'reports' %}active{% endif %}" href="{% url 'projects:reports' project.id %}"><i class="bi bi-bar-chart-line"></i> Reports</a>
+  <a class="{% if tab == 'settings' %}active{% endif %}" href="{% url 'projects:settings' project.id %}"><i class="bi bi-gear"></i> Settings</a>
+</nav>

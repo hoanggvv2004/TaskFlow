@@ -1,0 +1,38 @@
+{% load ui_tags %}
+<a class="project-card" href="{{ project.get_absolute_url }}">
+  <div class="project-cover-wrap">
+    {% if project.cover_image %}
+      <img class="project-cover" src="{{ project.cover_image.url }}" alt="{{ project.name }}" loading="lazy">
+    {% else %}
+      <div class="project-cover-placeholder"><i class="bi bi-folder2"></i></div>
+    {% endif %}
+    {% if project.archived_at %}
+      <span class="status-float badge-muted badge-dot">Đã lưu trữ</span>
+    {% else %}
+      <span class="status-float {{ project.status.slug|badge_class }} badge-dot">{{ project.status.name }}</span>
+    {% endif %}
+    <span class="priority-float {{ project.priority.slug|badge_class }}">{{ project.priority.name }}</span>
+  </div>
+  <div class="project-body">
+    <div class="eyebrow"><span>{{ project.category|default:"Project" }}</span><span class="code-tag">{{ project.code }}</span></div>
+    <h3>{{ project.name }}</h3>
+    {% if project.department %}<div class="small text-muted mb-1"><i class="bi bi-diagram-3 me-1"></i>{{ project.department.name }}</div>{% endif %}
+    <p>{{ project.description|default:"Chưa có mô tả." }}</p>
+    {% with stats=project.task_stats %}
+      <div class="d-flex justify-content-between fs-12 text-muted mb-1">
+        <span>Progress</span><span class="fw-600 text-tabular" style="color:var(--text)">{{ stats.progress }}%</span>
+      </div>
+      <div class="progress-thin {{ stats.progress|progress_tone }}"><div data-width="{{ stats.progress }}" style="width:0"></div></div>
+      <div class="project-foot">
+        <div class="avatar-stack">
+          {% for member in project.members.all|slice:":3" %}{% user_avatar member.user 26 %}{% endfor %}
+          {% if project.members.count > 3 %}<span class="avatar-more">+{{ project.members.count|add:"-3" }}</span>{% endif %}
+        </div>
+        <div class="d-flex gap-3">
+          <span title="Tasks"><i class="bi bi-check2-square me-1"></i>{{ stats.completed }}/{{ stats.total }}</span>
+          <span class="{% if project.days_left is not None and project.days_left < 0 %}text-danger{% endif %}" title="Deadline"><i class="bi bi-calendar-event me-1"></i>{{ project.end_date|date:"d/m/Y" }}</span>
+        </div>
+      </div>
+    {% endwith %}
+  </div>
+</a>

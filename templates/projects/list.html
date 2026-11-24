@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% load ui_tags %}
+{% block title %}Projects{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <nav class="breadcrumb"><a href="{% url 'dashboard:home' %}"><i class="bi bi-house-door"></i></a><span class="sep">/</span><span class="current">Projects</span></nav>
+    <h1 class="page-title">Projects</h1>
+    <div class="page-sub">{{ page.paginator.count }} dự án bạn có quyền truy cập</div>
+  </div>
+  <div class="page-actions">
+    {% if can_create %}<a class="btn btn-primary" href="{% url 'projects:create' %}"><i class="bi bi-plus-lg"></i> Create Project</a>{% endif %}
+  </div>
+</div>
+
+<form class="filter-bar" method="get">
+  <input type="hidden" name="view" value="{{ view_mode }}">
+  <select class="form-select" name="lifecycle" aria-label="Vòng đời dự án">
+    <option value="active" {% if lifecycle == 'active' %}selected{% endif %}>Đang hoạt động</option>
+    <option value="archived" {% if lifecycle == 'archived' %}selected{% endif %}>Đã lưu trữ</option>
+    <option value="all" {% if lifecycle == 'all' %}selected{% endif %}>Mọi dự án</option>
+  </select>
+  <div class="search"><i class="bi bi-search"></i><input class="form-control" name="q" value="{{ query }}" placeholder="Tìm theo tên, mã dự án..."></div>
+  <select class="form-select" name="status">
+    <option value="">Mọi trạng thái</option>
+    {% for s in statuses %}<option value="{{ s.id }}" {% if status_id == s.id|stringformat:'s' %}selected{% endif %}>{{ s.name }}</option>{% endfor %}
+  </select>
+  <select class="form-select" name="priority">
+    <option value="">Mọi ưu tiên</option>
+    {% for s in priorities %}<option value="{{ s.id }}" {% if priority_id == s.id|stringformat:'s' %}selected{% endif %}>{{ s.name }}</option>{% endfor %}
+  </select>
+  <select class="form-select" name="manager">
+    <option value="">Mọi manager</option>
+    {% for m in managers %}<option value="{{ m.owner_id }}" {% if manager_id == m.owner_id|stringformat:'s' %}selected{% endif %}>{{ m.owner__first_name|default:m.owner__username }}</option>{% endfor %}
+  </select>
+  {% if departments %}
+    <select class="form-select" name="department" aria-label="Phòng phụ trách">
+      <option value="">Mọi phòng ban</option>
+      {% for department in departments %}<option value="{{ department.pk }}" {% if department_id == department.pk %}selected{% endif %}>{{ department.name }}</option>{% endfor %}
+    </select>
+  {% endif %}
+  <select class="form-select" name="sort">
+    <option value="-created_at" {% if sort == '-created_at' %}selected{% endif %}>Mới nhất</option>
+    <option value="name" {% if sort == 'name' %}selected{% endif %}>Tên A → Z</option>
+    <option value="-name" {% if sort == '-name' %}selected{% endif %}>Tên Z → A</option>
+    <option value="end_date" {% if sort == 'end_date' %}selected{% endif %}>Deadline gần nhất</option>
+    <option value="current_priority_order" {% if sort == 'current_priority_order' %}selected{% endif %}>Ưu tiên</option>
+    <option value="current_status_order" {% if sort == 'current_status_order' %}selected{% endif %}>Trạng thái</option>
+  </select>
+  <button class="btn btn-light"><i class="bi bi-funnel"></i> Lọc</button>
+  {% if query or status_id or priority_id or manager_id or department_id %}<a class="btn btn-link btn-sm" href="{% url 'projects:list' %}">Xóa lọc</a>{% endif %}
+  {% querystring_without "view" "page" as qs %}
+  <div class="view-switch ms-auto">
+    <a class="{% if view_mode == 'grid' %}active{% endif %}" href="?view=grid{% if qs %}&{{ qs }}{% endif %}" title="Grid"><i class="bi bi-grid-3x3-gap"></i></a>
+    <a class="{% if view_mode == 'list' %}active{% endif %}" href="?view=list{% if qs %}&{{ qs }}{% endif %}" title="List"><i class="bi bi-list-ul"></i></a>
+  </div>
+</form>
+
+{% if not page.object_list %}
+  {% if query or status_id or priority_id or manager_id or department_id %}
+    {% include "components/empty.html" with icon="bi-search" title="Không tìm thấy dự án phù hợp" text="Hãy thử thay đổi từ khóa hoặc bộ lọc." %}
+  {% else %}
+    {% include "components/empty.html" with title="Bạn chưa có dự án nào." text="Hãy tạo dự án đầu tiên để bắt đầu quản lý công việc." action_url="/projects/create/" action_label="Create Project" image="/static/images/empty-projects.jpg" %}
+  {% endif %}
+{% elif view_mode == 'list' %}
+  <div class="card-soft table-wrap">
+    <table class="table">
+      <thead><tr><th>Dự án</th><th>Manager</th><th>Thành viên</th><th>Status</th><th>Priority</th><th>Progress</th><th>Deadline</th><th class="text-end">Tasks</th></tr></thead>
+      <tbody data-stagger>
+      {% for project in page %}
+        {% with stats=project.task_stats %}
+        <tr>
+          <td class="title-cell">
+            <div class="d-flex align-items-center gap-3">
+              {% if project.cover_image %}<img src="{{ project.cover_image.url }}" style="width:38px;height:38px;border-radius:9px;object-fit:cover" alt="">{% else %}<div class="stat-icon tone-primary" style="width:38px;height:38px"><i class="bi bi-folder2"></i></div>{% endif %}
+              <div><a href="{{ project.get_absolute_url }}">{{ project.name }}</a><div class="fs-12 text-muted">{{ project.code }} · {{ project.department.name|default:project.category }}</div></div>
+            </div>
+          </td>
+          <td><div class="d-flex align-items-center gap-2">{% user_avatar project.owner 24 %}<span>{{ project.owner.get_display_name }}</span></div></td>
+          <td><div class="avatar-stack">{% for m in project.members.all|slice:":3" %}{% user_avatar m.user 24 %}{% endfor %}{% if project.members.count > 3 %}<span class="avatar-more" style="width:24px;height:24px;font-size:10px">+{{ project.members.count|add:"-3" }}</span>{% endif %}</div></td>
+          <td>{% if project.archived_at %}<span class="badge-muted badge-dot">Đã lưu trữ</span>{% else %}<span class="{{ project.status.slug|badge_class }} badge-dot">{{ project.status.name }}</span>{% endif %}</td>
+          <td><span class="{{ project.priority.slug|badge_class }}">{{ project.priority.name }}</span></td>
+          <td style="min-width:140px"><div class="progress-row"><div class="progress-thin {{ stats.progress|progress_tone }}"><div data-width="{{ stats.progress }}" style="width:0"></div></div><span class="pct">{{ stats.progress }}%</span></div></td>
+          <td class="{% if project.days_left is not None and project.days_left < 0 %}text-danger{% endif %}">{{ project.end_date|date:"d/m/Y" }}</td>
+          <td class="text-end text-tabular">{{ project.task_count }}</td>
+        </tr>
+        {% endwith %}
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% else %}
+  <div class="row g-3" data-stagger>
+    {% for project in page %}
+      <div class="col-md-6 col-xl-4">{% include "components/project_card.html" %}</div>
+    {% endfor %}
+  </div>
+{% endif %}
+{% include "components/pagination.html" %}
+{% endblock %}

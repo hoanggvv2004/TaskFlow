@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <nav class="breadcrumb"><a href="{% url 'dashboard:home' %}"><i class="bi bi-house-door"></i></a><span class="sep">/</span><a href="{% url 'projects:list' %}">Projects</a>{% if project %}<span class="sep">/</span><a href="{{ project.get_absolute_url }}">{{ project.name }}</a>{% endif %}<span class="sep">/</span><span class="current">{{ title }}</span></nav>
+    <h1 class="page-title">{{ title }}</h1>
+    <div class="page-sub">Mã dự án sẽ được sinh tự động dạng PRJ-0001. Progress được tính từ task thật.</div>
+  </div>
+</div>
+<form method="post" enctype="multipart/form-data" novalidate>
+  {% csrf_token %}
+  <div class="row g-3">
+    <div class="col-lg-8">
+      <div class="tf-card">
+        <div class="tf-card-head"><h2 class="section-title"><i class="bi bi-info-circle"></i>Thông tin dự án</h2></div>
+        <div class="tf-card-body">
+          {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors.0 }}</div>{% endif %}
+          <div class="mb-3">
+            <label class="form-label">{{ form.name.label }} <span class="text-danger">*</span></label>
+            {{ form.name }}
+            {% if form.name.errors %}<div class="text-danger small mt-1">{{ form.name.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">{{ form.description.label }}</label>
+            {{ form.description }}
+            <div class="form-text">Mô tả ngắn mục tiêu, phạm vi và kết quả kỳ vọng.</div>
+          </div>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">{{ form.category.label }}</label>
+              {{ form.category }}
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">{{ form.start_date.label }} <span class="text-danger">*</span></label>
+              {{ form.start_date }}
+              {% if form.start_date.errors %}<div class="text-danger small mt-1">{{ form.start_date.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">{{ form.end_date.label }} <span class="text-danger">*</span></label>
+              {{ form.end_date }}
+              {% if form.end_date.errors %}<div class="text-danger small mt-1">{{ form.end_date.errors.0 }}</div>{% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="tf-card mb-3">
+        <div class="tf-card-head"><h2 class="section-title"><i class="bi bi-sliders"></i>Phân loại</h2></div>
+        <div class="tf-card-body">
+          <div class="mb-3">
+            <label class="form-label" for="{{ form.department.id_for_label }}">{{ form.department.label }}</label>
+            {{ form.department }} {{ form.department.errors }}
+          </div>
+          <div class="mb-3">
+            <label class="form-label">{{ form.status.label }}</label>
+            {{ form.status }}
+          </div>
+          <div class="mb-0">
+            <label class="form-label">{{ form.priority.label }}</label>
+            {{ form.priority }}
+          </div>
+        </div>
+      </div>
+      <div class="tf-card">
+        <div class="tf-card-head"><h2 class="section-title"><i class="bi bi-image"></i>Cover image</h2></div>
+        <div class="tf-card-body">
+          {% if project and project.cover_image %}<img src="{{ project.cover_image.url }}" class="rounded mb-3 w-100" style="height:120px;object-fit:cover" alt="">{% endif %}
+          {{ form.cover_image }}
+          <div class="form-text">PNG/JPG, tỉ lệ ngang. Không bắt buộc.</div>
+          {% if form.cover_image.errors %}<div class="text-danger small mt-1">{{ form.cover_image.errors.0 }}</div>{% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="d-flex justify-content-end gap-2 mt-3">
+    <a class="btn btn-light" href="{% if project %}{{ project.get_absolute_url }}{% else %}{% url 'projects:list' %}{% endif %}">Hủy</a>
+    <button class="btn btn-primary" type="submit"><i class="bi bi-check-lg"></i> Lưu dự án</button>
+  </div>
+</form>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% load ui_tags %}
+<nav class="breadcrumb">
+  <a href="{% url 'dashboard:home' %}"><i class="bi bi-house-door"></i></a>
+  <span class="sep">/</span><a href="{% url 'projects:list' %}">Projects</a>
+  <span class="sep">/</span><a href="{% url 'projects:detail' project.id %}">{{ project.name }}</a>
+  <span class="sep">/</span><span class="current">{{ tab|title }}</span>
+</nav>
+<div class="project-hero">
+  {% if project.cover_image %}
+    <img class="cover-thumb" src="{{ project.cover_image.url }}" alt="">
+  {% else %}
+    <div class="cover-thumb placeholder"><i class="bi bi-folder2"></i></div>
+  {% endif %}
+  <div class="flex-grow-1 min-w-0">
+    <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
+      <span class="code-tag">{{ project.code }}</span>
+      {% if project.archived_at %}<span class="badge-muted badge-dot">Đã lưu trữ · Chỉ xem</span>{% endif %}
+      <span class="{{ project.status.slug|badge_class }} badge-dot">{{ project.status.name }}</span>
+      <span class="{{ project.priority.slug|badge_class }}">{{ project.priority.name }}</span>
+      {% if project.category %}<span class="text-muted fs-12">· {{ project.category }}</span>{% endif %}
+      {% if project.department %}<span class="badge-info"><i class="bi bi-diagram-3 me-1"></i>{{ project.department.name }}</span>{% endif %}
+    </div>
+    <h1 class="page-title">{{ project.name }}</h1>
+    <div class="page-sub d-flex align-items-center gap-3 flex-wrap">
+      <span><i class="bi bi-person me-1"></i>{{ project.owner.get_display_name }}</span>
+      <span><i class="bi bi-calendar-range me-1"></i>{{ project.start_date|date:"d/m/Y" }} → {{ project.end_date|date:"d/m/Y" }}</span>
+      {% with days=project.days_left %}
+        {% if days is not None %}
+          <span class="{% if days < 0 %}text-danger{% elif days <= 7 %}text-warning{% endif %}"><i class="bi bi-hourglass-split me-1"></i>{% if days < 0 %}Quá hạn {{ days|stringformat:"d"|slice:"1:" }} ngày{% else %}Còn {{ days }} ngày{% endif %}</span>
+        {% endif %}
+      {% endwith %}
+    </div>
+  </div>
+  <div class="page-actions">
+    <div class="avatar-stack me-2 d-none d-md-flex">
+      {% for m in members|slice:":4" %}{% user_avatar m.user 30 %}{% endfor %}
+      {% if members.count > 4 %}<span class="avatar-more">+{{ members.count|add:"-4" }}</span>{% endif %}
+    </div>
+    {% if can_manage %}
+      <a class="btn btn-light" href="{% url 'projects:edit' project.id %}"><i class="bi bi-pencil"></i> Chỉnh sửa</a>
+      <a class="btn btn-primary" href="{% url 'tasks:create' %}?project={{ project.id }}"><i class="bi bi-plus-lg"></i> Task</a>
+    {% endif %}
+  </div>
+</div>
+{% include "components/project_tabs.html" %}

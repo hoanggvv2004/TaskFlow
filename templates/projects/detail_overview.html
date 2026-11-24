@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% load ui_tags %}
+{% block title %}{{ project.name }}{% endblock %}
+{% block content %}
+{% include "components/project_header.html" %}
+<div class="row g-3 mb-3" data-stagger>
+  <div class="col-6 col-lg-3">{% include "components/stat_card.html" with label="Total Tasks" value=stats.total icon="bi-check2-square" tone="tone-primary" %}</div>
+  <div class="col-6 col-lg-3">{% include "components/stat_card.html" with label="Completed" value=stats.completed icon="bi-check2-circle" tone="tone-success" %}</div>
+  <div class="col-6 col-lg-3">{% include "components/stat_card.html" with label="Overdue" value=stats.overdue icon="bi-exclamation-triangle" tone="tone-danger" %}</div>
+  <div class="col-6 col-lg-3">{% include "components/stat_card.html" with label="Members" value=members.count icon="bi-people" tone="tone-violet" %}</div>
+</div>
+<div class="row g-3" data-stagger>
+  <div class="col-lg-8">
+    <div class="tf-card mb-3">
+      <div class="tf-card-head"><h2 class="section-title"><i class="bi bi-file-text"></i>Mô tả</h2></div>
+      <div class="tf-card-body">
+        <p class="mb-4" style="color:var(--text-2)">{{ project.description|default:"Chưa có mô tả."|linebreaksbr }}</p>
+        <div class="meta-grid">
+          <div class="meta-item"><span>Start Date</span><strong>{{ project.start_date|date:"d/m/Y" }}</strong></div>
+          <div class="meta-item"><span>End Date</span><strong>{{ project.end_date|date:"d/m/Y" }}</strong></div>
+          <div class="meta-item"><span>Days Remaining</span><strong class="{% if project.days_left < 0 %}text-danger{% endif %}">{{ project.days_left }} ngày</strong></div>
+          <div class="meta-item"><span>Owner</span><strong class="d-flex align-items-center gap-2">{% user_avatar project.owner 22 %}{{ project.owner.get_display_name }}</strong></div>
+        </div>
+        <div class="divider"></div>
+        <div class="d-flex justify-content-between fs-13 mb-1"><span class="text-muted">Progress (Completed / Total)</span><strong>{{ stats.progress }}%</strong></div>
+        <div class="progress-thin {{ stats.progress|progress_tone }}" style="height:8px"><div data-width="{{ stats.progress }}" style="width:0"></div></div>
+      </div>
+    </div>
+    <div class="tf-card">
+      <div class="tf-card-head"><h2 class="section-title"><i class="bi bi-activity"></i>Recent Activity</h2><a class="fs-13" href="{% url 'projects:activity' project.id %}">Tất cả</a></div>
+      <div class="tf-card-body">
+        <div class="timeline">
+          {% for log in recent_activity %}
+            <div class="timeline-item"><div class="time">{{ log.created_at|date:"H:i · d/m/Y" }}</div><div class="text">{{ log.description }}</div></div>
+          {% empty %}<p class="text-muted mb-0">Chưa có hoạt động.</p>{% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="tf-card mb-3">
+      <div class="tf-card-head"><h2 class="section-title"><i class="bi bi-people"></i>Members</h2><a class="fs-13" href="{% url 'projects:members' project.id %}">Quản lý</a></div>
+      <div class="tf-card-body tight">
+        {% for m in members|slice:":6" %}
+          <div class="list-row">
+            {% user_avatar m.user 32 %}
+            <div class="grow"><span class="title">{{ m.user.get_display_name }}</span><span class="meta">{{ m.user.job_title }}</span></div>
+            <span class="role-pill role-{{ m.role }}">{{ m.get_role_display }}</span>
+          </div>
+        {% endfor %}
+        {% if members.count > 6 %}<a class="d-block text-center py-2 fs-13" href="{% url 'projects:members' project.id %}">+{{ members.count|add:"-6" }} thành viên khác</a>{% endif %}
+      </div>
+    </div>
+    <div class="tf-card">
+      <div class="tf-card-head"><h2 class="section-title"><i class="bi bi-lightning"></i>Quick actions</h2></div>
+      <div class="tf-card-body d-grid gap-2">
+        <a class="btn btn-light justify-content-start" href="{% url 'projects:kanban' project.id %}"><i class="bi bi-kanban"></i> Mở Kanban board</a>
+        <a class="btn btn-light justify-content-start" href="{% url 'projects:documents' project.id %}"><i class="bi bi-file-earmark-text"></i> Tài liệu dự án</a>
+        <a class="btn btn-light justify-content-start" href="{% url 'projects:reports' project.id %}"><i class="bi bi-bar-chart-line"></i> Báo cáo dự án</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
