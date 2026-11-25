@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% load ui_tags %}
+{% block title %}Documents{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <nav class="breadcrumb"><a href="{% url 'dashboard:home' %}"><i class="bi bi-house-door"></i></a><span class="sep">/</span><span class="current">Documents</span></nav>
+    <h1 class="page-title">Documents</h1>
+    <div class="page-sub">{{ page.paginator.count }} tài liệu trong các dự án bạn tham gia</div>
+  </div>
+</div>
+<form class="filter-bar" method="get">
+  <div class="search"><i class="bi bi-search"></i><input class="form-control" name="q" value="{{ query }}" placeholder="Tìm tài liệu theo tên..."></div>
+  <select class="form-select" name="type">
+    <option value="">Mọi loại</option>
+    <option value="pdf" {% if file_type == 'pdf' %}selected{% endif %}>PDF</option>
+    <option value="docx" {% if file_type == 'docx' %}selected{% endif %}>Word</option>
+    <option value="xlsx" {% if file_type == 'xlsx' %}selected{% endif %}>Excel</option>
+    <option value="pptx" {% if file_type == 'pptx' %}selected{% endif %}>PowerPoint</option>
+    <option value="png" {% if file_type == 'png' %}selected{% endif %}>PNG</option>
+    <option value="jpg" {% if file_type == 'jpg' %}selected{% endif %}>JPG</option>
+    <option value="zip" {% if file_type == 'zip' %}selected{% endif %}>ZIP</option>
+  </select>
+  <select class="form-select" name="project">
+    <option value="">Mọi dự án</option>
+    {% for p in projects %}<option value="{{ p.id }}" {% if request.GET.project == p.id|stringformat:'s' %}selected{% endif %}>{{ p.name }}</option>{% endfor %}
+  </select>
+  <button class="btn btn-light"><i class="bi bi-funnel"></i> Lọc</button>
+</form>
+<div class="card-soft table-wrap">
+  <table class="table">
+    <thead><tr><th>Tài liệu</th><th>Dự án</th><th>Task</th><th>Người tải</th><th>Ngày</th><th class="text-end">Thao tác</th></tr></thead>
+    <tbody data-stagger>
+    {% for doc in page %}
+      <tr>
+        <td>
+          <div class="d-flex align-items-center gap-3">
+            <div class="file-icon file-{{ doc.file_type }} file-default">{{ doc.file_type|slice:":4" }}</div>
+            <div class="min-w-0"><div class="fw-600 text-truncate" style="max-width:260px">{{ doc.original_name }}</div><div class="fs-12 text-muted">{{ doc.file_size|filesizeformat }}</div></div>
+          </div>
+        </td>
+        <td>{% if doc.project %}<a class="fs-13" href="{{ doc.project.get_absolute_url }}">{{ doc.project.name }}</a>{% else %}—{% endif %}</td>
+        <td>{% if doc.task %}<a class="code-tag" href="{{ doc.task.get_absolute_url }}">{{ doc.task.code }}</a>{% else %}<span class="text-muted">—</span>{% endif %}</td>
+        <td><div class="d-flex align-items-center gap-2">{% if doc.uploaded_by %}{% user_avatar doc.uploaded_by 24 %}<span class="fs-13">{{ doc.uploaded_by.get_display_name }}</span>{% else %}—{% endif %}</div></td>
+        <td class="text-muted fs-13">{{ doc.created_at|date:"d/m/Y" }}</td>
+        <td>
+          <div class="table-actions">
+            <a class="btn btn-light btn-sm btn-icon" title="Tải xuống" href="{% url 'tasks:document_download' doc.id %}"><i class="bi bi-download"></i></a>
+            <form method="post" action="{% url 'tasks:document_delete' doc.id %}">{% csrf_token %}<button class="btn btn-outline-danger btn-sm btn-icon" title="Xóa" data-confirm="Xóa tài liệu này?"><i class="bi bi-trash"></i></button></form>
+          </div>
+        </td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="6" class="p-0">{% include "components/empty.html" with icon="bi-file-earmark" title="Chưa có tài liệu" text="Tài liệu tải lên trong dự án hoặc task sẽ hiển thị ở đây." %}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "components/pagination.html" %}
+{% endblock %}
