@@ -1,0 +1,31 @@
+  {% extends "base.html" %}
+{% load ui_tags %}
+{% block title %}System Activity{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <nav class="breadcrumb"><a href="{% url 'dashboard:home' %}"><i class="bi bi-house-door"></i></a><span class="sep">/</span><span class="current">System Activity</span></nav>
+    <h1 class="page-title">System Activity</h1>
+    <div class="page-sub">Toàn bộ nhật ký hệ thống · {{ page.paginator.count }} sự kiện</div>
+  </div>
+</div>
+<div class="card-soft table-wrap">
+  <table class="table">
+    <thead><tr><th>Thời gian</th><th>Người thực hiện</th><th>Hành động</th><th>Mô tả</th><th>Đối tượng</th></tr></thead>
+    <tbody data-stagger>
+    {% for log in page %}
+      <tr>
+        <td class="text-muted fs-13 text-nowrap">{{ log.created_at|date:"d/m/Y H:i" }}</td>
+        <td>{% if log.user %}<div class="d-flex align-items-center gap-2">{% user_avatar log.user 24 %}<span class="fs-13">{{ log.user.get_display_name }}</span></div>{% else %}<span class="text-muted fs-13">Hệ thống</span>{% endif %}</td>
+        <td><span class="badge-muted"><i class="bi {{ log.action|activity_icon }}"></i>{{ log.action }}</span></td>
+        <td class="fs-13" style="color:var(--text-2)">{{ log.description }}</td>
+        <td class="fs-12">{% if log.project %}<a href="{{ log.project.get_absolute_url }}">{{ log.project.code }}</a>{% endif %}{% if log.task %} · <a href="{{ log.task.get_absolute_url }}">{{ log.task.code }}</a>{% endif %}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="5" class="p-0">{% include "components/empty.html" with icon="bi-activity" title="Chưa có hoạt động" %}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "components/pagination.html" %}
+{% endblock %}
