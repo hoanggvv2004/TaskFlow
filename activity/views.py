@@ -5,7 +5,6 @@ from django.shortcuts import render
 from activity.models import ActivityLog
 from core.permissions import is_admin
 
-
 @login_required
 def activity_list(request):
     logs = ActivityLog.objects.select_related("user", "project", "task")
