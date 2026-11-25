@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% load ui_tags %}
+{% block title %}Documents · {{ project.name }}{% endblock %}
+{% block content %}
+{% include "components/project_header.html" %}
+<div class="row g-3">
+  <div class="col-lg-8">
+    <form class="filter-bar" method="get">
+      <div class="search"><i class="bi bi-search"></i><input class="form-control" name="q" value="{{ query }}" placeholder="Tìm tài liệu..."></div>
+      <select class="form-select" name="type">
+        <option value="">Mọi loại</option>
+        <option value="pdf" {% if file_type == 'pdf' %}selected{% endif %}>PDF</option>
+        <option value="docx" {% if file_type == 'docx' %}selected{% endif %}>Word</option>
+        <option value="xlsx" {% if file_type == 'xlsx' %}selected{% endif %}>Excel</option>
+        <option value="pptx" {% if file_type == 'pptx' %}selected{% endif %}>PowerPoint</option>
+        <option value="png" {% if file_type == 'png' %}selected{% endif %}>PNG</option>
+        <option value="jpg" {% if file_type == 'jpg' %}selected{% endif %}>JPG</option>
+        <option value="zip" {% if file_type == 'zip' %}selected{% endif %}>ZIP</option>
+      </select>
+      <button class="btn btn-light"><i class="bi bi-funnel"></i> Lọc</button>
+    </form>
+    <div class="card-soft table-wrap">
+      <table class="table">
+        <thead><tr><th>Tài liệu</th><th>Task</th><th>Người tải</th><th>Ngày</th><th class="text-end">Thao tác</th></tr></thead>
+        <tbody data-stagger>
+        {% for doc in documents %}
+          <tr>
+            <td>
+              <div class="d-flex align-items-center gap-3">
+                <div class="file-icon file-{{ doc.file_type }} file-default">{{ doc.file_type|slice:":4" }}</div>
+                <div class="min-w-0"><div class="fw-600 text-truncate" style="max-width:280px">{{ doc.original_name }}</div><div class="fs-12 text-muted">{{ doc.file_size|filesizeformat }}</div></div>
+              </div>
+            </td>
+            <td>{% if doc.task %}<a class="code-tag" href="{{ doc.task.get_absolute_url }}">{{ doc.task.code }}</a>{% else %}<span class="text-muted">—</span>{% endif %}</td>
+            <td><div class="d-flex align-items-center gap-2">{% if doc.uploaded_by %}{% user_avatar doc.uploaded_by 24 %}<span>{{ doc.uploaded_by.get_display_name }}</span>{% else %}—{% endif %}</div></td>
+            <td class="text-muted">{{ doc.created_at|date:"d/m/Y" }}</td>
+            <td>
+              <div class="table-actions">
+                <a class="btn btn-light btn-sm btn-icon" title="Tải xuống" href="{% url 'tasks:document_download' doc.id %}"><i class="bi bi-download"></i></a>
+                {% if can_manage or not project.archived_at and doc.uploaded_by_id == user.id %}
+                <form method="post" action="{% url 'tasks:document_delete' doc.id %}">{% csrf_token %}<input type="hidden" name="next" value="{{ request.path }}"><button class="btn btn-outline-danger btn-sm btn-icon" title="Xóa" data-confirm="Xóa tài liệu này?"><i class="bi bi-trash"></i></button></form>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="5" class="p-0">{% include "components/empty.html" with icon="bi-file-earmark" title="Chưa có tài liệu" text="Tải lên kế hoạch, thiết kế hoặc báo cáo để cả nhóm cùng truy cập." %}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% if not project.archived_at %}
+  <div class="col-lg-4">
+    <form class="tf-card" method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <div class="tf-card-head"><h2 class="section-title"><i class="bi bi-cloud-arrow-up"></i>Upload tài liệu</h2></div>
+      <div class="tf-card-body">
+        <div class="dropzone mb-3">
+          <i class="bi bi-cloud-arrow-up d-block mb-1" style="font-size:22px"></i>
+          <span data-dz-label>Kéo thả hoặc bấm để chọn tệp</span>
+          <input type="file" name="file" required>
+        </div>
+        <button class="btn btn-primary w-100"><i class="bi bi-upload"></i> Upload</button>
+        <div class="form-text mt-2">PDF, Word, Excel, PowerPoint, PNG, JPG, ZIP · tối đa 10MB. Tệp thực thi bị chặn.</div>
+      </div>
+    </form>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
