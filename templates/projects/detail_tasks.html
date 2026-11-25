@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% load ui_tags %}
+{% block title %}Tasks · {{ project.name }}{% endblock %}
+{% block content %}
+{% include "components/project_header.html" %}
+<div class="d-flex flex-wrap justify-content-between gap-2 mb-3">
+  <nav class="d-flex flex-wrap gap-2" aria-label="Lọc nhanh công việc">
+    <a class="btn btn-sm {% if focus == 'all' %}btn-primary{% else %}btn-light{% endif %}" href="{% querystring focus='all' overdue=None page=None %}">Tất cả</a>
+    <a class="btn btn-sm {% if focus == 'overdue' %}btn-danger{% else %}btn-outline-danger{% endif %}" href="{% querystring focus='overdue' overdue=None sort=None page=None %}">Quá hạn</a>
+    <a class="btn btn-sm {% if focus == 'due_soon' %}btn-primary{% else %}btn-light{% endif %}" href="{% querystring focus='due_soon' overdue=None sort=None page=None %}">Hạn trong 3 ngày</a>
+    {% if can_manage %}
+    <a class="btn btn-sm {% if focus == 'review' %}btn-primary{% else %}btn-light{% endif %}" href="{% querystring focus='review' overdue=None page=None %}">Chờ duyệt</a>
+    <a class="btn btn-sm {% if focus == 'unassigned' %}btn-primary{% else %}btn-light{% endif %}" href="{% querystring focus='unassigned' overdue=None page=None %}">Chưa giao</a>
+    {% else %}
+    <a class="btn btn-sm {% if focus == 'assigned' %}btn-primary{% else %}btn-light{% endif %}" href="{% querystring focus='assigned' overdue=None page=None %}">Việc của tôi</a>
+    {% endif %}
+  </nav>
+  {% if can_manage %}<a href="{% url 'projects:task_import' project.id %}" class="btn btn-sm btn-outline-primary"><i class="bi bi-file-earmark-spreadsheet"></i> Nhập Excel</a>{% endif %}
+</div>
+<form class="filter-bar" method="get">
+  <input type="hidden" name="focus" value="{{ focus }}">
+  <div class="search"><i class="bi bi-search"></i><input class="form-control" name="q" value="{{ query }}" placeholder="Tìm theo tiêu đề, mã task..."></div>
+  <select class="form-select" name="status">
+    <option value="">Mọi trạng thái</option>
+    {% for s in statuses %}<option value="{{ s.id }}" {% if request.GET.status == s.id|stringformat:'s' %}selected{% endif %}>{{ s.name }}</option>{% endfor %}
+  </select>
+  <select class="form-select" name="priority">
+    <option value="">Mọi ưu tiên</option>
+    {% for s in priorities %}<option value="{{ s.id }}" {% if request.GET.priority == s.id|stringformat:'s' %}selected{% endif %}>{{ s.name }}</option>{% endfor %}
+  </select>
+  <select class="form-select" name="type" aria-label="Loại công việc">
+    <option value="">Mọi loại công việc</option>
+    {% for item in task_types %}<option value="{{ item.id }}" {% if request.GET.type == item.id|stringformat:'s' %}selected{% endif %}>{{ item.name }}</option>{% endfor %}
+  </select>
+  <select class="form-select" name="assignee">
+    <option value="">Mọi người phụ trách</option>
+    {% for m in members %}<option value="{{ m.user.id }}" {% if request.GET.assignee == m.user.id|stringformat:'s' %}selected{% endif %}>{{ m.user.get_display_name }}</option>{% endfor %}
+  </select>
+  <select class="form-select" name="sort">
+    <option value="-created_at" {% if sort == '-created_at' %}selected{% endif %}>Mới nhất</option>
+    <option value="due_date" {% if sort == 'due_date' %}selected{% endif %}>Deadline</option>
+    <option value="current_priority_order" {% if sort == 'current_priority_order' %}selected{% endif %}>Ưu tiên</option>
+    <option value="current_status_order" {% if sort == 'current_status_order' %}selected{% endif %}>Trạng thái</option>
+    <option value="title" {% if sort == 'title' %}selected{% endif %}>Tên</option>
+  </select>
+  <button class="btn btn-light"><i class="bi bi-funnel"></i> Lọc</button>
+</form>
+<div class="card-soft table-wrap">
+  <table class="table">
+    <thead><tr><th>Task</th><th>Assignees</th><th>Status</th><th>Priority</th><th>Progress</th><th>Due</th></tr></thead>
+    <tbody data-stagger>
+    {% for task in page %}
+      <tr>
+        <td class="title-cell">
+          <a href="{{ task.get_absolute_url }}">{{ task.title }}</a>
+          <div class="fs-12 text-muted"><span class="code-tag">{{ task.code }}</span> · {{ task.task_type.name|default:"Chưa phân loại" }}</div>
+        </td>
+        <td><div class="avatar-stack">{% for u in task.assignees.all|slice:":3" %}{% user_avatar u 26 %}{% endfor %}{% if task.assignees.count > 3 %}<span class="avatar-more" style="width:26px;height:26px">+{{ task.assignees.count|add:"-3" }}</span>{% endif %}{% if not task.assignees.count %}<span class="text-muted fs-12">Chưa giao</span>{% endif %}</div></td>
+        <td><span class="{{ task.status.stage|badge_class }} badge-dot">{{ task.status.name }}</span></td>
+        <td><span class="{{ task.priority.slug|badge_class }}">{{ task.priority.name }}</span></td>
+        <td style="min-width:120px"><div class="progress-row"><div class="progress-thin xs {{ task.progress|progress_tone }}"><div data-width="{{ task.progress }}" style="width:0"></div></div><span class="pct">{{ task.progress }}%</span></div></td>
+        <td><span class="due-chip {% if task.is_overdue %}overdue{% elif task.is_due_soon %}soon{% endif %}"><i class="bi bi-calendar3"></i>{{ task.due_date|date:"d/m/Y"|default:"—" }}</span>{% if task.is_overdue %} <span class="badge-danger">Overdue</span>{% elif task.is_due_soon %} <span class="badge-medium">Due soon</span>{% endif %}</td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="6" class="p-0">{% include "components/empty.html" with icon="bi-list-check" title="Chưa có nhiệm vụ" text="Hãy tạo task đầu tiên hoặc điều chỉnh bộ lọc." %}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "components/pagination.html" %}
+{% endblock %}
