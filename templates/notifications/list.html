@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% load ui_tags %}
+{% block title %}Notifications{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <nav class="breadcrumb"><a href="{% url 'dashboard:home' %}"><i class="bi bi-house-door"></i></a><span class="sep">/</span><span class="current">Notifications</span></nav>
+    <h1 class="page-title">Notifications</h1>
+    <div class="page-sub">{{ page.paginator.count }} thông báo</div>
+  </div>
+  <div class="page-actions"><button class="btn btn-light" id="markAllRead" type="button"><i class="bi bi-check2-all"></i> Mark all as read</button></div>
+</div>
+<div class="tf-card" style="overflow:hidden" data-stagger>
+  {% for item in page %}
+    <a class="notif-item {% if not item.is_read %}notif-unread{% endif %}" href="{{ item.url|default:'#' }}" data-mark-read="{{ item.id }}" data-url="{{ item.url|default:'#' }}">
+      <div class="notif-icon {{ item.type|notif_tone }}"><i class="bi {{ item.type|notif_icon }}"></i></div>
+      <div class="flex-grow-1 min-w-0">
+        <div class="title">{{ item.title }}</div>
+        <div class="msg">{{ item.message }}</div>
+        <div class="time"><i class="bi bi-clock me-1"></i>{{ item.created_at|timesince }} trước · {{ item.created_at|date:"d/m/Y H:i" }}</div>
+      </div>
+    </a>
+  {% empty %}
+    {% include "components/empty.html" with icon="bi-bell" title="Chưa có thông báo" text="Khi có cập nhật task hoặc dự án, thông báo sẽ hiện ở đây." %}
+  {% endfor %}
+</div>
+{% include "components/pagination.html" %}
+{% endblock %}
