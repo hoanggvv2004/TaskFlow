@@ -1,0 +1,67 @@
+<div class="modal fade" id="createTaskModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <form class="modal-content" method="post" action="{% url 'tasks:quick_create' %}">
+      {% csrf_token %}
+      <input type="hidden" name="next" value="{{ request.path }}">
+      <div class="modal-header">
+        <div>
+          <h5 class="modal-title">Tạo nhiệm vụ nhanh</h5>
+          <div class="text-muted fs-12">Điền thông tin cơ bản, chi tiết có thể chỉnh sau.</div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="mb-3">
+          <label class="form-label">Tiêu đề <span class="text-danger">*</span></label>
+          <input class="form-control" name="title" required placeholder="Ví dụ: Xây dựng đăng nhập" autofocus>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Dự án <span class="text-danger">*</span></label>
+          <select class="form-select" name="project_id" required>
+            <option value="">Chọn dự án</option>
+            {% for project in quick_projects %}
+              <option value="{{ project.id }}">{{ project.code }} · {{ project.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="row g-3">
+          <div class="col-6">
+            <label class="form-label">Ưu tiên</label>
+            <select class="form-select" name="priority_id">
+              {% for item in quick_priorities %}
+                <option value="{{ item.id }}" {% if item.slug == 'medium' %}selected{% endif %}>{{ item.name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-6">
+            <label class="form-label">Deadline</label>
+            <input class="form-control" type="date" name="due_date">
+          </div>
+        </div>
+        <div class="mt-3">
+          <label class="form-label" for="quickTaskType">Loại công việc</label>
+          <select class="form-select" id="quickTaskType" name="task_type" disabled>
+            <option value="">Chưa phân loại</option>
+          </select>
+          <template id="quickTaskTypeOptions">
+            {% for project in quick_projects %}
+              {% for item in project.quick_types %}<option value="{{ item.pk }}" data-project="{{ project.pk }}">{{ item.name }}</option>{% endfor %}
+            {% endfor %}
+          </template>
+        </div>
+        <div class="mb-0 mt-3">
+          <label class="form-label">Mô tả</label>
+          <textarea class="form-control" name="description" rows="2" placeholder="Mô tả ngắn (không bắt buộc)"></textarea>
+        </div>
+        <div class="form-check mt-3">
+          <input class="form-check-input" type="checkbox" name="confirm_outside_deadline" id="quickConfirm">
+          <label class="form-check-label fs-13" for="quickConfirm">Xác nhận nếu hạn task vượt deadline dự án</label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-light" type="button" data-bs-dismiss="modal">Hủy</button>
+        <button class="btn btn-primary" type="submit"><i class="bi bi-plus-lg"></i> Tạo nhiệm vụ</button>
+      </div>
+    </form>
+  </div>
+</div>
