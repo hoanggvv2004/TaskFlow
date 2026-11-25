@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% load ui_tags %}
+{% block title %}Activity · {{ project.name }}{% endblock %}
+{% block content %}
+{% include "components/project_header.html" %}
+<div class="tf-card">
+  <div class="tf-card-head"><h2 class="section-title"><i class="bi bi-activity"></i>Nhật ký hoạt động</h2><span class="section-sub">{{ page.paginator.count }} sự kiện</span></div>
+  <div class="tf-card-body tight" data-stagger>
+    {% for log in page %}
+      <div class="activity-row">
+        <div class="act-icon"><i class="bi {{ log.action|activity_icon }}"></i></div>
+        <div class="flex-grow-1 min-w-0">
+          <div class="fs-13" style="color:var(--text-2)">{{ log.description }}</div>
+          <div class="fs-12 text-muted mt-1">
+            {% if log.user %}<span class="d-inline-flex align-items-center gap-1">{% user_avatar log.user 16 %}{{ log.user.get_display_name }}</span> · {% endif %}
+            {{ log.created_at|date:"H:i, d/m/Y" }}
+            {% if log.task %} · <a class="code-tag" href="{{ log.task.get_absolute_url }}">{{ log.task.code }}</a>{% endif %}
+          </div>
+        </div>
+      </div>
+    {% empty %}
+      {% include "components/empty.html" with icon="bi-activity" title="Chưa có hoạt động" text="Các thao tác trong dự án sẽ được ghi lại tại đây." %}
+    {% endfor %}
+  </div>
+</div>
+{% include "components/pagination.html" %}
+{% endblock %}
