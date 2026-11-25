@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load ui_tags %}
+{% block title %}Chọn dự án{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <nav class="breadcrumb"><a href="{% url 'dashboard:home' %}"><i class="bi bi-house-door"></i></a><span class="sep">/</span><a href="{% url 'tasks:list' %}">Tasks</a><span class="sep">/</span><span class="current">Create Task</span></nav>
+    <h1 class="page-title">Chọn dự án để tạo nhiệm vụ</h1>
+    <div class="page-sub">Nhiệm vụ luôn thuộc về một dự án. Bạn cần quyền quản lý dự án đó.</div>
+  </div>
+</div>
+<div class="row g-3" data-stagger>
+  {% for project in projects %}
+    <div class="col-md-6 col-xl-4">
+      <a class="tf-card hover-lift d-flex align-items-center gap-3 p-3 card-link h-100" href="{% url 'tasks:create' %}?project={{ project.id }}">
+        {% if project.cover_image %}<img src="{{ project.cover_image.url }}" style="width:44px;height:44px;border-radius:10px;object-fit:cover" alt="">{% else %}<div class="stat-icon tone-primary" style="width:44px;height:44px"><i class="bi bi-folder2"></i></div>{% endif %}
+        <div class="flex-grow-1 min-w-0">
+          <div class="fs-12 text-muted">{{ project.code }}</div>
+          <strong class="d-block text-truncate">{{ project.name }}</strong>
+          <span class="fs-12 text-muted">{{ project.owner.get_display_name }} · deadline {{ project.end_date|date:"d/m/Y" }}</span>
+        </div>
+        <i class="bi bi-chevron-right text-muted"></i>
+      </a>
+    </div>
+  {% empty %}
+    <div class="col-12">{% include "components/empty.html" with icon="bi-folder-x" title="Chưa có dự án phù hợp" text="Bạn cần quyền quản lý dự án để tạo task." %}</div>
+  {% endfor %}
+</div>
+{% endblock %}

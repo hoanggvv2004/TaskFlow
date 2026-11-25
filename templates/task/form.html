@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <nav class="breadcrumb"><a href="{% url 'dashboard:home' %}"><i class="bi bi-house-door"></i></a><span class="sep">/</span><a href="{% url 'projects:list' %}">Projects</a><span class="sep">/</span><a href="{{ project.get_absolute_url }}">{{ project.name }}</a><span class="sep">/</span><span class="current">{{ title }}</span></nav>
+    <h1 class="page-title">{{ title }}</h1>
+    <div class="page-sub">{% if task %}<span class="code-tag">{{ task.code }}</span>{% else %}Mã task sẽ được sinh tự động (TASK-00001).{% endif %} Deadline dự án: {{ project.end_date|date:"d/m/Y" }}.</div>
+  </div>
+</div>
+<form method="post" novalidate>
+  {% csrf_token %}
+  {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+  <div class="row g-3">
+    <div class="col-lg-8">
+      <div class="tf-card mb-3">
+        <div class="tf-card-head"><h2 class="section-title"><i class="bi bi-card-text"></i>Nội dung nhiệm vụ</h2></div>
+        <div class="tf-card-body">
+          <div class="mb-3">
+            <label class="form-label">{{ form.title.label }} <span class="text-danger">*</span></label>
+            {{ form.title }}
+            {% if form.title.errors %}<div class="text-danger small mt-1">{{ form.title.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="mb-0">
+            <label class="form-label">{{ form.description.label }}</label>
+            {{ form.description }}
+            {% if form.description.errors %}<div class="text-danger small mt-1">{{ form.description.errors.0 }}</div>{% endif %}
+          </div>
+        </div>
+      </div>
+      <div class="tf-card">
+        <div class="tf-card-head"><h2 class="section-title"><i class="bi bi-calendar-range"></i>Thời gian & công sức</h2></div>
+        <div class="tf-card-body">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">{{ form.start_date.label }}</label>
+              {{ form.start_date }}
+              {% if form.start_date.errors %}<div class="text-danger small mt-1">{{ form.start_date.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">{{ form.due_date.label }}</label>
+              {{ form.due_date }}
+              {% if form.due_date.errors %}<div class="text-danger small mt-1">{{ form.due_date.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">{{ form.estimated_hours.label }}</label>
+              {{ form.estimated_hours }}
+              {{ form.estimated_hours.errors }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">{{ form.actual_hours.label }}</label>
+              {{ form.actual_hours }}
+              {{ form.actual_hours.errors }}
+            </div>
+            <div class="col-md-4">
+              <label class="form-label">{{ form.progress.label }} (%)</label>
+              {{ form.progress }}
+              {% if form.progress.errors %}<div class="text-danger small mt-1">{{ form.progress.errors.0 }}</div>{% endif %}
+            </div>
+            <div class="col-12">
+              <label class="form-check">{{ form.confirm_outside_deadline }} <span>{{ form.confirm_outside_deadline.label }}</span></label>
+              <div class="form-text">Chỉ cần tick khi hạn task vượt quá deadline dự án và Manager vẫn muốn tiếp tục.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="tf-card mb-3">
+        <div class="tf-card-head"><h2 class="section-title"><i class="bi bi-sliders"></i>Phân loại</h2></div>
+        <div class="tf-card-body">
+          <div class="mb-3">
+            <div class="form-label">Trạng thái hiện tại</div>
+            <div class="fw-semibold">{{ form.status.name }}</div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">{{ form.priority.label }} <span class="text-danger">*</span></label>
+            {{ form.priority }}
+            {% if form.priority.errors %}<div class="text-danger small mt-1">{{ form.priority.errors.0 }}</div>{% endif %}
+          </div>
+          <div>
+            {{ form.task_type.label_tag }} {{ form.task_type }} {{ form.task_type.errors }}
+            <a class="form-text d-inline-block" href="{% url 'projects:workflow' project.pk %}#task-types">Quản lý loại công việc</a>
+          </div>
+        </div>
+      </div>
+      <div class="tf-card">
+        <div class="tf-card-head"><h2 class="section-title"><i class="bi bi-people"></i>{{ form.assignees.label }}</h2></div>
+        <div class="tf-card-body">
+          {{ form.assignees }}
+          <div class="form-text mt-2">Giữ Ctrl (hoặc Cmd) để chọn nhiều người. {% if project.department %}Chỉ thành viên dự án thuộc phòng {{ project.department.name }} mới có thể nhận việc.{% else %}Chỉ thành viên của dự án mới có thể được giao việc.{% endif %}</div>
+          {% if form.assignees.errors %}<div class="text-danger small mt-1">{{ form.assignees.errors.0 }}</div>{% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="d-flex justify-content-end gap-2 mt-3">
+    <a class="btn btn-light" href="{% if task %}{{ task.get_absolute_url }}{% else %}{{ project.get_absolute_url }}{% endif %}">Hủy</a>
+    <button class="btn btn-primary" type="submit"><i class="bi bi-check-lg"></i> Lưu nhiệm vụ</button>
+  </div>
+</form>
+{% endblock %}

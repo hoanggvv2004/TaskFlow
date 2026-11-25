@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% load ui_tags %}
+{% block title %}My Tasks{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <nav class="breadcrumb"><a href="{% url 'dashboard:home' %}"><i class="bi bi-house-door"></i></a><span class="sep">/</span><span class="current">My Tasks</span></nav>
+    <h1 class="page-title">My Tasks</h1>
+    <div class="page-sub">{{ page.paginator.count }} nhiệm vụ được giao cho bạn, sắp theo deadline</div>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-light" href="{% url 'tasks:calendar' %}"><i class="bi bi-calendar3"></i> Calendar</a>
+  </div>
+</div>
+<form class="filter-bar" method="get">
+  <span class="text-muted fs-13"><i class="bi bi-funnel me-1"></i>Trạng thái</span>
+  <select class="form-select" name="status" onchange="this.form.submit()">
+    <option value="">Tất cả</option>
+    {% for s in statuses %}<option value="{{ s.id }}" {% if request.GET.status == s.id|stringformat:'s' %}selected{% endif %}>{{ s.name }}</option>{% endfor %}
+  </select>
+</form>
+<div data-stagger>
+{% for task in page %}
+  <a class="tf-card hover-lift d-block mb-2 card-link" href="{{ task.get_absolute_url }}">
+    <div class="d-flex align-items-center gap-3 p-3">
+      <div class="stat-icon {% if task.is_completed %}tone-success{% elif task.is_overdue %}tone-danger{% elif task.is_due_soon %}tone-warning{% else %}tone-primary{% endif %}" style="width:38px;height:38px;font-size:15px">
+        <i class="bi {% if task.is_completed %}bi-check2-circle{% elif task.is_overdue %}bi-exclamation-circle{% elif task.is_due_soon %}bi-alarm{% else %}bi-circle{% endif %}"></i>
+      </div>
+      <div class="flex-grow-1 min-w-0">
+        <div class="d-flex align-items-center gap-2 flex-wrap"><strong class="text-truncate">{{ task.title }}</strong><span class="code-tag">{{ task.code }}</span></div>
+        <div class="fs-12 text-muted mt-1"><i class="bi bi-folder2 me-1"></i>{{ task.project.name }}</div>
+      </div>
+      <div class="d-none d-md-block" style="width:130px"><div class="progress-row"><div class="progress-thin xs {{ task.progress|progress_tone }}"><div data-width="{{ task.progress }}" style="width:0"></div></div><span class="pct">{{ task.progress }}%</span></div></div>
+      <span class="{{ task.priority.slug|badge_class }} d-none d-sm-inline-flex">{{ task.priority.name }}</span>
+      <span class="{{ task.status.stage|badge_class }} badge-dot">{{ task.status.name }}</span>
+      <span class="due-chip {% if task.is_overdue %}overdue{% elif task.is_due_soon %}soon{% endif %}" style="min-width:90px;justify-content:flex-end"><i class="bi bi-calendar3"></i>{{ task.due_date|date:"d/m/Y"|default:"—" }}</span>
+    </div>
+  </a>
+{% empty %}
+  {% include "components/empty.html" with icon="bi-inbox" title="Bạn chưa được giao nhiệm vụ." text="Khi quản lý giao việc, danh sách sẽ xuất hiện tại đây." %}
+{% endfor %}
+</div>
+{% include "components/pagination.html" %}
+{% endblock %}
