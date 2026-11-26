@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% load ui_tags %}
+{% block title %}Tìm kiếm{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <nav class="breadcrumb"><a href="{% url 'dashboard:home' %}"><i class="bi bi-house-door"></i></a><span class="sep">/</span><span class="current">Search</span></nav>
+    <h1 class="page-title">Kết quả cho “{{ query }}”</h1>
+    <div class="page-sub">{{ projects|length }} dự án · {{ tasks|length }} nhiệm vụ · {{ users|length }} thành viên</div>
+  </div>
+</div>
+<form class="filter-bar" method="get" action="{% url 'core:search' %}">
+  <div class="search"><i class="bi bi-search"></i><input class="form-control" name="q" value="{{ query }}" placeholder="Tìm dự án, nhiệm vụ, thành viên..." autofocus></div>
+  <button class="btn btn-primary"><i class="bi bi-search"></i> Tìm</button>
+</form>
+<div class="row g-3" data-stagger>
+  <div class="col-lg-4">
+    <div class="tf-card h-100">
+      <div class="tf-card-head"><h2 class="section-title"><i class="bi bi-folder2"></i>Projects</h2><span class="section-sub">{{ projects|length }}</span></div>
+      <div class="tf-card-body tight">
+        {% for p in projects %}
+          <a class="list-row hoverable" href="{{ p.get_absolute_url }}">
+            <div class="stat-icon tone-primary" style="width:32px;height:32px;font-size:14px"><i class="bi bi-folder2"></i></div>
+            <div class="grow"><span class="title">{{ p.name }}</span><span class="meta">{{ p.code }} · {{ p.owner.get_display_name }}</span></div>
+            <span class="{{ p.status.slug|badge_class }} badge-dot">{{ p.status.name }}</span>
+          </a>
+        {% empty %}<p class="text-muted fs-13 py-2 mb-0">Không có dự án phù hợp.</p>{% endfor %}
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="tf-card h-100">
+      <div class="tf-card-head"><h2 class="section-title"><i class="bi bi-check2-square"></i>Tasks</h2><span class="section-sub">{{ tasks|length }}</span></div>
+      <div class="tf-card-body tight">
+        {% for t in tasks %}
+          <a class="list-row hoverable" href="{{ t.get_absolute_url }}">
+            <div class="grow"><span class="title">{{ t.title }}</span><span class="meta">{{ t.code }} · {{ t.project.name }}</span></div>
+            <span class="{{ t.status.stage|badge_class }} badge-dot">{{ t.status.name }}</span>
+          </a>
+        {% empty %}<p class="text-muted fs-13 py-2 mb-0">Không có nhiệm vụ phù hợp.</p>{% endfor %}
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="tf-card h-100">
+      <div class="tf-card-head"><h2 class="section-title"><i class="bi bi-people"></i>Members</h2><span class="section-sub">{{ users|length }}</span></div>
+      <div class="tf-card-body tight">
+        {% for u in users %}
+          <a class="list-row hoverable" href="{{ u.get_absolute_url }}">
+            {% user_avatar u 32 %}
+            <div class="grow"><span class="title">{{ u.get_display_name }}</span><span class="meta">{{ u.job_title|default:u.email }}</span></div>
+            <span class="role-pill role-{{ u.role }}">{{ u.get_role_display }}</span>
+          </a>
+        {% empty %}<p class="text-muted fs-13 py-2 mb-0">Không có thành viên phù hợp.</p>{% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
