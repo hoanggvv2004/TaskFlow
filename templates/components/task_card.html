@@ -1,0 +1,26 @@
+{% load ui_tags %}
+<article class="task-card" data-task-id="{{ task.id }}" data-allowed-status="{{ task.transition_ids }}">
+  <div class="task-top">
+    <span class="{{ task.priority.slug|badge_class }}">{{ task.priority.name }}</span>
+    <span class="code-tag">{{ task.code }}</span>
+  </div>
+  <h4><a href="{{ task.get_absolute_url }}">{{ task.title }}</a></h4>
+  {% if task.task_type %}<div class="small text-muted mb-1">{{ task.task_type.name }}</div>{% endif %}
+  {% if task.description %}<p>{{ task.description|truncatechars:110 }}</p>{% endif %}
+  <div class="task-foot">
+    <span class="due-chip {% if task.is_overdue %}overdue{% elif task.is_due_soon %}soon{% endif %}">
+      <i class="bi {% if task.is_overdue %}bi-exclamation-circle{% elif task.is_due_soon %}bi-alarm{% else %}bi-calendar3{% endif %}"></i>
+      {% if task.due_date %}{{ task.due_date|date:"d/m" }}{% else %}—{% endif %}
+    </span>
+    <div class="d-flex align-items-center gap-2">
+      <div class="task-stats">
+        <span title="Bình luận"><i class="bi bi-chat"></i>{{ task.comments.count }}</span>
+        <span title="Tệp đính kèm"><i class="bi bi-paperclip"></i>{{ task.documents.count }}</span>
+      </div>
+      <div class="avatar-stack">
+        {% for user in task.assignees.all|slice:":2" %}{% user_avatar user 24 %}{% endfor %}
+        {% if task.assignees.count > 2 %}<span class="avatar-more" style="width:24px;height:24px;font-size:10px">+{{ task.assignees.count|add:"-2" }}</span>{% endif %}
+      </div>
+    </div>
+  </div>
+</article>

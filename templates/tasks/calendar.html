@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}Calendar{% endblock %}
+{% block extra_css %}
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
+<style>
+  .fc { --fc-border-color: var(--border); --fc-page-bg-color: var(--surface); --fc-neutral-bg-color: var(--surface-2); --fc-today-bg-color: var(--primary-soft); --fc-button-bg-color: var(--surface); --fc-button-border-color: var(--border); --fc-button-text-color: var(--text-2); --fc-button-hover-bg-color: var(--surface-2); --fc-button-hover-border-color: var(--border); --fc-button-active-bg-color: var(--primary-soft); --fc-button-active-border-color: var(--primary-soft); font-size: 13px; }
+  .fc .fc-button { border-radius: 8px; font-weight: 500; text-transform: capitalize; padding: 6px 12px; box-shadow: none !important; }
+  .fc .fc-button-primary:not(:disabled).fc-button-active { color: var(--primary); }
+  .fc .fc-toolbar-title { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+  .fc .fc-col-header-cell-cushion { font-size: 11.5px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-3); font-weight: 600; padding: 8px 4px; }
+  .fc .fc-daygrid-day-number { font-size: 12.5px; color: var(--text-2); padding: 6px 8px; }
+  .fc .fc-event { border: 0; border-radius: 6px; padding: 2px 6px; font-size: 11.5px; font-weight: 500; cursor: pointer; transition: transform var(--t-fast), box-shadow var(--t-fast); }
+  .fc .fc-event:hover { transform: translateY(-1px); box-shadow: var(--shadow-sm); }
+  .fc .fc-daygrid-event-dot { display: none; }
+  .fc-theme-standard td, .fc-theme-standard th, .fc-theme-standard .fc-scrollgrid { border-color: var(--border-2); }
+  .cal-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12.5px; color: var(--text-3); }
+  .cal-legend .dot { margin-right: 6px; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <nav class="breadcrumb"><a href="{% url 'dashboard:home' %}"><i class="bi bi-house-door"></i></a><span class="sep">/</span><span class="current">Calendar</span></nav>
+    <h1 class="page-title">Calendar</h1>
+    <div class="page-sub">Mốc thời gian của dự án và nhiệm vụ trong các dự án bạn tham gia</div>
+  </div>
+  <div class="cal-legend">
+    <span><span class="dot" style="background:#6366F1"></span>Project start</span>
+    <span><span class="dot" style="background:#7C3AED"></span>Project deadline</span>
+    <span><span class="dot" style="background:#5B6CFF"></span>Task start</span>
+    <span><span class="dot" style="background:#10B981"></span>Task due</span>
+    <span><span class="dot" style="background:#F59E0B"></span>Overdue</span>
+  </div>
+</div>
+<div class="tf-card p-3" id="calendar" style="min-height:640px"></div>
+{% endblock %}
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+    initialView: 'dayGridMonth',
+    height: 'auto',
+    headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek,timeGridDay' },
+    buttonText: { today: 'Hôm nay', month: 'Tháng', week: 'Tuần', day: 'Ngày' },
+    dayMaxEvents: 3,
+    events: '{% url "tasks:calendar_events" %}',
+    eventClick(info) {
+      if (info.event.url) {
+        info.jsEvent.preventDefault();
+        window.location.href = info.event.url;
+      }
+    }
+  });
+  calendar.render();
+});
+</script>
+{% endblock %}

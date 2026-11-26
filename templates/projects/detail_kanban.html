@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Kanban · {{ project.name }}{% endblock %}
+{% block content %}
+{% include "components/project_header.html" %}
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+  <div class="text-muted fs-13"><i class="bi bi-arrows-move me-1"></i>Kéo thả card giữa các cột để đổi trạng thái. Hệ thống sẽ kiểm tra quyền và lưu tự động.</div>
+  <a class="btn btn-light btn-sm" href="{% url 'tasks:kanban' %}?project={{ project.id }}"><i class="bi bi-arrows-fullscreen"></i> Xem toàn màn hình</a>
+</div>
+{% include "components/kanban_board.html" %}
+{% endblock %}
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+<script src="/static/js/kanban.js"></script>
+{% endblock %}

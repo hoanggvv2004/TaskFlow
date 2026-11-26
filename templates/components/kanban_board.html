@@ -1,0 +1,16 @@
+<div class="kanban-board" id="kanbanBoard">
+  {% for column in columns %}
+    <section class="kanban-col">
+      <div class="kanban-head">
+        <span class="dot" style="background:{{ column.status.color }}"></span>
+        <strong>{{ column.status.name }}</strong>
+        <span class="count" data-col-count>{{ column.tasks|length }}</span>
+      </div>
+      <div class="kanban-list" data-status-list="{{ column.status.id }}" data-stagger>
+        {% for task in column.tasks %}
+          {% include "components/task_card.html" %}
+        {% endfor %}
+      </div>
+    </section>
+  {% endfor %}
+</div>
