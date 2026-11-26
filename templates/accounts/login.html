@@ -1,0 +1,60 @@
+{% extends "base_auth.html" %}
+{% load static %}
+{% block title %}Đăng nhập{% endblock %}
+{% block content %}
+<div class="auth-shell">
+  <div class="auth-form">
+    <div class="auth-panel">
+      <div class="auth-brand">
+        <img class="brand-logo" src="{% static 'images/logo.svg' %}" alt="TaskFlow logo" width="40" height="40">
+        <div><strong>{{ SITE_NAME }}</strong><small>{{ SITE_TAGLINE }}</small></div>
+      </div>
+      <h1>Welcome back</h1>
+      <p class="lead-text">Đăng nhập để tiếp tục quản lý dự án và công việc nhóm.</p>
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger d-flex align-items-center gap-2"><i class="bi bi-exclamation-circle"></i><span>{{ form.non_field_errors.0 }}</span></div>
+      {% endif %}
+      <form method="post" novalidate>
+        {% csrf_token %}
+        <div class="mb-3">
+          <label class="form-label">{{ form.username.label }}</label>
+          {{ form.username }}
+          {% if form.username.errors %}<div class="text-danger small mt-1">{{ form.username.errors.0 }}</div>{% endif %}
+        </div>
+        <div class="mb-3">
+          <label class="form-label">{{ form.password.label }}</label>
+          <div class="position-relative">
+            {{ form.password }}
+            <button class="password-toggle" type="button" data-toggle-password="#loginPassword" aria-label="Hiện mật khẩu"><i class="bi bi-eye"></i></button>
+          </div>
+          {% if form.password.errors %}<div class="text-danger small mt-1">{{ form.password.errors.0 }}</div>{% endif %}
+        </div>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <label class="form-check d-flex align-items-center gap-2 mb-0">{{ form.remember_me }} <span class="fs-13">{{ form.remember_me.label }}</span></label>
+          <a class="fs-13" href="{% url 'accounts:password_reset' %}">Quên mật khẩu?</a>
+        </div>
+        <button class="btn btn-primary w-100 justify-content-center" type="submit" style="padding:10px">Đăng nhập <i class="bi bi-arrow-right"></i></button>
+      </form>
+      <p class="mt-4 mb-0 text-muted fs-13 text-center">Chưa có tài khoản? <a class="fw-600" href="{% url 'accounts:register' %}">Đăng ký</a></p>
+      <div class="demo-hint">
+        <div class="fw-600 mb-1" style="color:var(--text-2)"><i class="bi bi-key me-1"></i>Tài khoản demo</div>
+        <div><code>admin@projecthub.local</code> / <code>Admin@123</code></div>
+        <div><code>manager@projecthub.local</code> / <code>Manager@123</code></div>
+        <div><code>member@projecthub.local</code> / <code>Member@123</code></div>
+      </div>
+    </div>
+    <div class="auth-footer"><span>© {{ SITE_NAME }}</span><span>Django · MySQL · Bootstrap</span></div>
+  </div>
+  <div class="auth-hero">
+    <div class="auth-hero-copy">
+      <h2>Làm việc nhóm rõ ràng hơn, mỗi ngày.</h2>
+      <p>Theo dõi dự án, deadline và khối lượng công việc của cả team trên cùng một không gian làm việc.</p>
+      <ul>
+        <li><i class="bi bi-check-circle-fill"></i>Kanban kéo thả, cập nhật trạng thái tức thì</li>
+        <li><i class="bi bi-check-circle-fill"></i>Báo cáo tiến độ và xuất Excel / PDF</li>
+        <li><i class="bi bi-check-circle-fill"></i>Phân quyền theo vai trò, nhật ký hoạt động đầy đủ</li>
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

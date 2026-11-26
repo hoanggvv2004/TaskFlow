@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% load ui_tags %}
+{% block title %}Users{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <nav class="breadcrumb"><a href="{% url 'dashboard:home' %}"><i class="bi bi-house-door"></i></a><span class="sep">/</span><span class="current">Users</span></nav>
+    <h1 class="page-title">User Management</h1>
+    <div class="page-sub">{{ page.paginator.count }} tài khoản trong hệ thống</div>
+  </div>
+  <div class="page-actions"><a class="btn btn-primary" href="{% url 'accounts:admin_user_create' %}"><i class="bi bi-person-plus"></i> Thêm tài khoản</a></div>
+</div>
+<form class="filter-bar" method="get">
+  <div class="search"><i class="bi bi-search"></i><input class="form-control" name="q" value="{{ query }}" placeholder="Tìm theo tên, username, email..."></div>
+  <select class="form-select" name="role">
+    <option value="">Mọi vai trò</option>
+    <option value="ADMIN" {% if role == 'ADMIN' %}selected{% endif %}>Admin</option>
+    <option value="PROJECT_MANAGER" {% if role == 'PROJECT_MANAGER' %}selected{% endif %}>Project Manager</option>
+    <option value="MEMBER" {% if role == 'MEMBER' %}selected{% endif %}>Member</option>
+  </select>
+  <select class="form-select" name="status">
+    <option value="">Mọi trạng thái</option>
+    <option value="active" {% if status == 'active' %}selected{% endif %}>Active</option>
+    <option value="locked" {% if status == 'locked' %}selected{% endif %}>Locked</option>
+  </select>
+  <select class="form-select" name="department" aria-label="Phòng ban">
+    <option value="">Mọi phòng ban</option>
+    {% for department in departments %}<option value="{{ department.pk }}" {% if department_id == department.pk %}selected{% endif %}>{{ department.name }}</option>{% endfor %}
+  </select>
+  <button class="btn btn-light"><i class="bi bi-funnel"></i> Lọc</button>
+  {% if query or role or status or department_id %}<a class="btn btn-link btn-sm" href="{% url 'accounts:admin_users' %}">Xóa lọc</a>{% endif %}
+</form>
+<div class="card-soft table-wrap">
+  <table class="table">
+    <thead><tr><th>User</th><th>Email</th><th>Role</th><th class="text-center">Projects</th><th class="text-center">Tasks</th><th>Joined</th><th>Status</th><th class="text-end">Thao tác</th></tr></thead>
+    <tbody data-stagger>
+    {% for u in page %}
+      <tr>
+        <td class="title-cell"><div class="d-flex align-items-center gap-2">{% user_avatar u 32 %}<div><a href="{% url 'accounts:user_detail' u.id %}">{{ u.get_display_name }}</a><div class="fs-12 text-muted">@{{ u.username }}</div></div></div></td>
+        <td class="fs-13">{{ u.email }}</td>
+        <td><span class="role-pill role-{{ u.role }}">{{ u.get_role_display }}</span><div class="small text-muted mt-1">{{ u.department.name|default:"Chưa phân phòng" }}</div></td>
+        <td class="text-center text-tabular">{{ u.project_count }}</td>
+        <td class="text-center text-tabular">{{ u.task_count }}</td>
+        <td class="text-muted fs-13">{{ u.date_joined|date:"d/m/Y" }}</td>
+        <td>{% if u.is_deleted %}<span class="badge-muted badge-dot">Deleted</span>{% elif u.is_active %}<span class="badge-success badge-dot">Active</span>{% else %}<span class="badge-danger badge-dot">Locked</span>{% endif %}</td>
+        <td><div class="table-actions"><a class="btn btn-light btn-sm btn-icon" title="Sửa" href="{% url 'accounts:admin_user_edit' u.id %}"><i class="bi bi-pencil"></i></a><a class="btn btn-light btn-sm btn-icon" title="Chi tiết" href="{% url 'accounts:user_detail' u.id %}"><i class="bi bi-eye"></i></a></div></td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="8" class="p-0">{% include "components/empty.html" with icon="bi-people" title="Không tìm thấy người dùng" text="Thử thay đổi bộ lọc." %}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% include "components/pagination.html" %}
+{% endblock %}

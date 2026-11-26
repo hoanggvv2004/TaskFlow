@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <nav class="breadcrumb"><a href="{% url 'dashboard:home' %}"><i class="bi bi-house-door"></i></a><span class="sep">/</span><a href="{% url 'accounts:admin_users' %}">Users</a><span class="sep">/</span><span class="current">{{ title }}</span></nav>
+    <h1 class="page-title">{{ title }}</h1>
+    <div class="page-sub">{% if target %}Đang chỉnh sửa tài khoản <strong>@{{ target.username }}</strong>.{% else %}Nếu để trống mật khẩu, tài khoản sẽ dùng mật khẩu mặc định <code>Welcome@123</code>.{% endif %}</div>
+  </div>
+</div>
+<form method="post" novalidate>
+  {% csrf_token %}
+  {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors.0 }}</div>{% endif %}
+  <div class="row g-3">
+    <div class="col-lg-8">
+      <div class="tf-card">
+        <div class="tf-card-head"><h2 class="section-title"><i class="bi bi-person-vcard"></i>Thông tin tài khoản</h2></div>
+        <div class="tf-card-body">
+          <div class="row g-3">
+            <div class="col-md-6"><label class="form-label">{{ form.username.label }} <span class="text-danger">*</span></label>{{ form.username }}{% if form.username.errors %}<div class="text-danger small mt-1">{{ form.username.errors.0 }}</div>{% endif %}</div>
+            <div class="col-md-6"><label class="form-label">{{ form.email.label }} <span class="text-danger">*</span></label>{{ form.email }}{% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>{% endif %}</div>
+            <div class="col-md-6"><label class="form-label">{{ form.first_name.label }}</label>{{ form.first_name }}</div>
+            <div class="col-md-6"><label class="form-label">{{ form.last_name.label }}</label>{{ form.last_name }}</div>
+            <div class="col-md-6"><label class="form-label">{{ form.job_title.label }}</label>{{ form.job_title }}</div>
+            <div class="col-md-6"><label class="form-label">{{ form.phone.label }}</label>{{ form.phone }}</div>
+            <div class="col-12"><label class="form-label">{{ form.password.label }}</label>{{ form.password }}{% if form.password.errors %}<div class="text-danger small mt-1">{{ form.password.errors.0 }}</div>{% endif %}<div class="form-text">Mật khẩu được băm trước khi lưu; không lưu dạng thuần.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-lg-4">
+      <div class="tf-card">
+        <div class="tf-card-head"><h2 class="section-title"><i class="bi bi-shield-check"></i>Phân quyền</h2></div>
+        <div class="tf-card-body">
+          <div class="mb-3"><label class="form-label">{{ form.role.label }}</label>{{ form.role }}{% if form.role.errors %}<div class="text-danger small mt-1">{{ form.role.errors.0 }}</div>{% endif %}</div>
+          <div class="mb-3">
+            <label class="form-label" for="{{ form.department.id_for_label }}">{{ form.department.label }}</label>
+            {{ form.department }} {{ form.department.errors }}
+            <div class="form-text">Để bổ nhiệm trưởng phòng, lưu tài khoản rồi chọn người này tại
+              <a href="{% url 'accounts:departments' %}">Admin → Phòng ban</a>.
+            </div>
+          </div>
+          <label class="list-row hoverable w-100" style="cursor:pointer">
+            <div class="grow"><span class="title">{{ form.is_active.label }}</span><span class="meta">Tắt để khóa tài khoản, người dùng sẽ không đăng nhập được.</span></div>
+            <div class="form-check form-switch m-0">{{ form.is_active }}</div>
+          </label>
+          <div class="divider"></div>
+          <div class="fs-12 text-muted">
+            <div class="mb-1"><span class="role-pill role-ADMIN">Admin</span> toàn quyền hệ thống</div>
+            <div class="mb-1"><span class="role-pill role-PROJECT_MANAGER">Project Manager</span> quản lý các dự án được giao</div>
+            <div><span class="role-pill role-MEMBER">Member</span> thực hiện task được giao</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="d-flex justify-content-end gap-2 mt-3">
+    <a class="btn btn-light" href="{% if target %}{% url 'accounts:user_detail' target.id %}{% else %}{% url 'accounts:admin_users' %}{% endif %}">Hủy</a>
+    <button class="btn btn-primary"><i class="bi bi-check-lg"></i> Lưu</button>
+  </div>
+</form>
+{% endblock %}

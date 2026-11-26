@@ -1,0 +1,59 @@
+{% extends "base_auth.html" %}
+{% load static %}
+{% block title %}Đăng ký{% endblock %}
+{% block content %}
+<div class="auth-shell">
+  <div class="auth-form">
+    <div class="auth-panel">
+      <div class="auth-brand">
+        <img class="brand-logo" src="{% static 'images/logo.svg' %}" alt="TaskFlow logo" width="40" height="40">
+        <div><strong>{{ SITE_NAME }}</strong><small>{{ SITE_TAGLINE }}</small></div>
+      </div>
+      <h1>Tạo tài khoản</h1>
+      <p class="lead-text">Tham gia TaskFlow để quản lý công việc nhóm. Tài khoản mới có vai trò Member.</p>
+      {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors.0 }}</div>{% endif %}
+      <form method="post" novalidate>
+        {% csrf_token %}
+        <div class="mb-3">
+          <label class="form-label">{{ form.first_name.label }}</label>{{ form.first_name }}
+          {% if form.first_name.errors %}<div class="text-danger small mt-1">{{ form.first_name.errors.0 }}</div>{% endif %}
+        </div>
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label">{{ form.email.label }}</label>{{ form.email }}
+            {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">{{ form.username.label }}</label>{{ form.username }}
+            {% if form.username.errors %}<div class="text-danger small mt-1">{{ form.username.errors.0 }}</div>{% endif %}
+          </div>
+        </div>
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <label class="form-label">{{ form.password1.label }}</label>{{ form.password1 }}
+            {% if form.password1.errors %}<div class="text-danger small mt-1">{{ form.password1.errors.0 }}</div>{% endif %}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">{{ form.password2.label }}</label>{{ form.password2 }}
+            {% if form.password2.errors %}<div class="text-danger small mt-1">{{ form.password2.errors.0 }}</div>{% endif %}
+          </div>
+        </div>
+        <button class="btn btn-primary w-100 justify-content-center" type="submit" style="padding:10px">Tạo tài khoản <i class="bi bi-arrow-right"></i></button>
+      </form>
+      <p class="mt-4 mb-0 text-muted fs-13 text-center">Đã có tài khoản? <a class="fw-600" href="{% url 'accounts:login' %}">Đăng nhập</a></p>
+    </div>
+    <div class="auth-footer"><span>© {{ SITE_NAME }}</span><span>Django · MySQL · Bootstrap</span></div>
+  </div>
+  <div class="auth-hero">
+    <div class="auth-hero-copy">
+      <h2>Bắt đầu dự án đầu tiên trong vài phút.</h2>
+      <p>Tạo tài khoản, tham gia dự án và theo dõi công việc được giao ngay trên dashboard cá nhân.</p>
+      <ul>
+        <li><i class="bi bi-check-circle-fill"></i>Dashboard theo vai trò</li>
+        <li><i class="bi bi-check-circle-fill"></i>Thông báo khi được giao việc hoặc sắp đến hạn</li>
+        <li><i class="bi bi-check-circle-fill"></i>Bình luận, checklist và tệp đính kèm trên từng task</li>
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Phòng ban{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1 class="page-title">Phòng ban</h1>
+    <p class="page-sub mb-0">Quản lý trưởng phòng, nhân sự và dự án phụ trách.</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-light" href="{% url 'accounts:admin_users' %}">Quản lý nhân sự</a>
+    <a class="btn btn-primary" href="{% url 'accounts:department_create' %}"><i class="bi bi-plus-lg"></i> Thêm phòng ban</a>
+  </div>
+</div>
+<div class="card-soft table-wrap">
+  <table class="table align-middle">
+    <thead><tr><th>Phòng ban</th><th>Trưởng phòng</th><th>Nhân sự</th><th>Dự án</th><th>Trạng thái</th><th></th></tr></thead>
+    <tbody>
+      {% for department in departments %}
+      <tr>
+        <td class="title-cell"><a href="{% url 'accounts:department_edit' department.pk %}">{{ department.name }}</a> <span class="code-tag">{{ department.code }}</span>
+          {% if department.description %}<div class="text-muted small mt-1">{{ department.description|truncatechars:100 }}</div>{% endif %}
+        </td>
+        <td>{% if department.manager %}{{ department.manager.get_display_name }}{% if not department.manager.is_active %} <span class="badge-muted">Đã khóa</span>{% endif %}{% else %}<span class="text-muted">Chưa bổ nhiệm</span>{% endif %}</td>
+        <td><a href="{% url 'accounts:admin_users' %}?department={{ department.pk }}">{{ department.staff_count }} người</a></td>
+        <td><a href="{% url 'projects:list' %}?department={{ department.pk }}&amp;lifecycle=all">{{ department.project_count }} dự án</a></td>
+        <td><span class="{% if department.is_active %}badge-success{% else %}badge-muted{% endif %} badge-dot">{{ department.is_active|yesno:"Đang hoạt động,Ngừng hoạt động" }}</span></td>
+        <td class="text-end"><a class="btn btn-light btn-sm" href="{% url 'accounts:department_edit' department.pk %}"><i class="bi bi-pencil"></i> Chỉnh sửa</a></td>
+      </tr>
+      {% empty %}
+        <tr><td colspan="6" class="p-0">{% include "components/empty.html" with icon="bi-diagram-3" title="Chưa có phòng ban" text="Tạo phòng rồi gán nhân sự trong trang Users." %}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

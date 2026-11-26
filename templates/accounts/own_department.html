@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% load ui_tags %}
+{% block title %}Phòng ban{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <nav class="breadcrumb"><a href="{% url 'dashboard:home' %}">Tổng quan</a><span class="sep">/</span><span class="current">Phòng ban</span></nav>
+    <h1 class="page-title">{{ department.name|default:"Phòng ban của tôi" }}</h1>
+    {% if department %}
+      <div class="page-sub d-flex align-items-center flex-wrap gap-2">
+        <span class="code-tag">{{ department.code }}</span>
+        {% if is_head %}<span class="badge-info">Bạn là trưởng phòng</span>{% endif %}
+        {% if not department.is_active %}<span class="badge-muted">Ngừng hoạt động</span>{% endif %}
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% if department %}
+  <section class="tf-card mb-3">
+    <div class="tf-card-body">
+      <div class="d-flex flex-wrap align-items-center gap-2">
+        <span class="text-muted">Trưởng phòng</span>
+        <strong>{{ department.manager.get_display_name|default:"Chưa bổ nhiệm" }}</strong>
+      </div>
+      {% if department.description %}<p class="mb-0 mt-2">{{ department.description|linebreaksbr }}</p>{% endif %}
+    </div>
+  </section>
+  <div class="row g-3">
+    <section class="col-lg-6">
+      <div class="tf-card h-100">
+        <div class="tf-card-head"><h2 class="section-title"><i class="bi bi-people"></i>Nhân sự trong phòng</h2></div>
+        <div class="tf-card-body tight">
+          {% for person in staff %}
+            <div class="list-row">
+              {% user_avatar person 32 %}
+              <div class="grow"><span class="title">{{ person.get_display_name }}</span><span class="meta">@{{ person.username }}{% if person.job_title %} · {{ person.job_title }}{% endif %}</span></div>
+              {% if person.pk == department.manager_id %}<span class="badge-info">Trưởng phòng</span>{% endif %}
+            </div>
+          {% empty %}
+            <p class="text-muted my-3">Phòng chưa có nhân sự đang hoạt động.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+    <section class="col-lg-6">
+      <div class="tf-card h-100">
+        <div class="tf-card-head"><h2 class="section-title"><i class="bi bi-folder2"></i>Dự án trong phòng bạn tham gia</h2></div>
+        <div class="tf-card-body tight">
+          {% for project in projects %}
+            <a class="list-row hoverable" href="{{ project.get_absolute_url }}">
+              <div class="grow"><span class="title">{{ project.name }}</span><span class="meta">{{ project.code }}</span></div>
+              {% if project.archived_at %}<span class="badge-muted">Đã lưu trữ</span>{% else %}<span class="{{ project.status.slug|badge_class }}">{{ project.status.name }}</span>{% endif %}
+            </a>
+          {% empty %}
+            <p class="text-muted my-3">Bạn chưa tham gia dự án nào thuộc phòng này.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+  </div>
+{% else %}
+  {% include "components/empty.html" with icon="bi-diagram-3" title="Chưa được gán phòng ban" text="Admin có thể chọn phòng cho bạn trong Users → Sửa tài khoản, rồi bổ nhiệm trưởng phòng tại Admin → Phòng ban." %}
+{% endif %}
+{% endblock %}

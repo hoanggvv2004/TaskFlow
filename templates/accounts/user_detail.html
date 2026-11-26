@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% load ui_tags %}
+{% block title %}{{ profile_user.get_display_name }}{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <nav class="breadcrumb"><a href="{% url 'dashboard:home' %}"><i class="bi bi-house-door"></i></a><span class="sep">/</span><a href="{% url 'accounts:team' %}">Team</a><span class="sep">/</span><span class="current">{{ profile_user.get_display_name }}</span></nav>
+    <div class="d-flex gap-3 align-items-center">
+      {% user_avatar profile_user 64 %}
+      <div>
+        <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
+          <span class="role-pill role-{{ profile_user.role }}">{{ profile_user.get_role_display }}</span>
+          {% if profile_user.is_deleted %}<span class="badge-muted badge-dot">Deleted</span>{% elif profile_user.is_active %}<span class="badge-success badge-dot">Active</span>{% else %}<span class="badge-danger badge-dot">Locked</span>{% endif %}
+        </div>
+        <h1 class="page-title">{{ profile_user.get_display_name }}</h1>
+        <div class="page-sub">{{ profile_user.email }}{% if profile_user.job_title %} · {{ profile_user.job_title }}{% endif %}{% if profile_user.department %} · {{ profile_user.department.name }}{% endif %} · @{{ profile_user.username }}</div>
+      </div>
+    </div>
+  </div>
+  {% if user.role == 'ADMIN' or user.is_superuser %}
+  <div class="page-actions">
+    <a class="btn btn-light" href="{% url 'accounts:admin_user_edit' profile_user.id %}"><i class="bi bi-pencil"></i> Sửa</a>
+    <form method="post" action="{% url 'accounts:admin_user_toggle' profile_user.id %}">{% csrf_token %}<button class="btn btn-outline-warning" data-confirm="{% if profile_user.is_active %}Khóa{% else %}Mở khóa{% endif %} tài khoản này?"><i class="bi {% if profile_user.is_active %}bi-lock{% else %}bi-unlock{% endif %}"></i> {% if profile_user.is_active %}Khóa{% else %}Mở khóa{% endif %}</button></form>
+    <form method="post" action="{% url 'accounts:admin_user_reset_password' profile_user.id %}">{% csrf_token %}<button class="btn btn-light" data-confirm="Reset mật khẩu về Welcome@123?"><i class="bi bi-key"></i> Reset mật khẩu</button></form>
+  </div>
+  {% endif %}
+</div>
+<div class="row g-3 mb-3" data-stagger>
+  <div class="col-6 col-lg-3">{% include "components/stat_card.html" with label="Projects" value=projects.count icon="bi-folder2" tone="tone-primary" %}</div>
+  <div class="col-6 col-lg-3">{% include "components/stat_card.html" with label="Tasks assigned" value=tasks.count icon="bi-check2-square" tone="tone-info" %}</div>
+  <div class="col-6 col-lg-3">{% include "components/stat_card.html" with label="Hoạt động gần đây" value=logs|length icon="bi-activity" tone="tone-violet" %}</div>
+  <div class="col-6 col-lg-3">{% include "components/stat_card.html" with label="Tham gia" value=profile_user.date_joined|date:"d/m/Y" icon="bi-calendar-plus" tone="tone-muted" %}</div>
+</div>
+<div class="row g-3" data-stagger>
+  <div class="col-lg-6">
+    <div class="tf-card h-100">
+      <div class="tf-card-head"><h2 class="section-title"><i class="bi bi-folder2"></i>Dự án tham gia</h2></div>
+      <div class="tf-card-body tight">
+        {% for p in projects %}
+          <a class="list-row hoverable" href="{{ p.get_absolute_url }}">
+            <div class="stat-icon tone-primary" style="width:34px;height:34px;font-size:14px"><i class="bi bi-folder2"></i></div>
+            <div class="grow"><span class="title">{{ p.name }}</span><span class="meta">{{ p.code }} · {{ p.owner.get_display_name }}</span></div>
+            <span class="{{ p.status.slug|badge_class }} badge-dot">{{ p.status.name }}</span>
+          </a>
+        {% empty %}<p class="text-muted fs-13 py-2 mb-0">Chưa tham gia dự án.</p>{% endfor %}
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="tf-card h-100">
+      <div class="tf-card-head"><h2 class="section-title"><i class="bi bi-check2-square"></i>Task được giao</h2></div>
+      <div class="tf-card-body tight">
+        {% for t in tasks|slice:":10" %}
+          <a class="list-row hoverable" href="{{ t.get_absolute_url }}">
+            <div class="grow"><span class="title">{{ t.title }}</span><span class="meta">{{ t.code }} · {{ t.project.name }}</span></div>
+            <span class="{{ t.priority.slug|badge_class }}">{{ t.priority.name }}</span>
+            <span class="{{ t.status.stage|badge_class }} badge-dot">{{ t.status.name }}</span>
+          </a>
+        {% empty %}<p class="text-muted fs-13 py-2 mb-0">Chưa có task.</p>{% endfor %}
+        {% if tasks.count > 10 %}<div class="text-center fs-12 text-muted py-2">+{{ tasks.count|add:"-10" }} task khác</div>{% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="col-12">
+    <div class="tf-card">
+      <div class="tf-card-head"><h2 class="section-title"><i class="bi bi-clock-history"></i>Lịch sử hoạt động</h2></div>
+      <div class="tf-card-body">
+        <div class="timeline">
+          {% for log in logs %}
+            <div class="timeline-item"><div class="time">{{ log.created_at|date:"H:i · d/m/Y" }}</div><div class="text">{{ log.description }}</div></div>
+          {% empty %}<p class="text-muted fs-13 mb-0">Chưa có hoạt động.</p>{% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
