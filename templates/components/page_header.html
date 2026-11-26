@@ -1,0 +1,17 @@
+{# usage: include with title, subtitle (optional), crumbs (list of (label, url) or plain label) #}
+<div class="page-header">
+  <div>
+    {% if crumbs %}
+    <nav class="breadcrumb">
+      <a href="{% url 'dashboard:home' %}"><i class="bi bi-house-door"></i></a>
+      {% for crumb in crumbs %}
+        <span class="sep">/</span>
+        {% if crumb.1 %}<a href="{{ crumb.1 }}">{{ crumb.0 }}</a>{% else %}<span class="current">{{ crumb.0 }}</span>{% endif %}
+      {% endfor %}
+    </nav>
+    {% endif %}
+    <h1 class="page-title">{{ title }}</h1>
+    {% if subtitle %}<div class="page-sub">{{ subtitle }}</div>{% endif %}
+  </div>
+  {% if actions %}<div class="page-actions">{{ actions }}</div>{% endif %}
+</div>

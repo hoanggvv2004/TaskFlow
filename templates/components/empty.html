@@ -1,0 +1,12 @@
+<div class="empty-state card-soft">
+  {% if image %}
+    <img src="{{ image }}" alt="">
+  {% else %}
+    <div class="empty-icon"><i class="bi {{ icon|default:'bi-inbox' }}"></i></div>
+  {% endif %}
+  <h3>{{ title }}</h3>
+  <p>{{ text }}</p>
+  {% if action_url %}
+    <a class="btn btn-primary" href="{{ action_url }}"><i class="bi bi-plus-lg"></i> {{ action_label }}</a>
+  {% endif %}
+</div>

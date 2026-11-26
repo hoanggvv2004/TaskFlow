@@ -1,0 +1,8 @@
+<div class="stat-card">
+  <div class="stat-icon {{ tone|default:'tone-primary' }}"><i class="bi {{ icon|default:'bi-graph-up' }}"></i></div>
+  <div class="stat-body">
+    <span>{{ label }}</span>
+    <strong class="text-tabular">{{ value }}</strong>
+    {% if hint %}<small>{{ hint }}</small>{% endif %}
+  </div>
+</div>

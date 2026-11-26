@@ -1,0 +1,53 @@
+{% load static ui_tags %}
+{% with url_name=request.resolver_match.url_name app_name=request.resolver_match.app_name %}
+<aside class="sidebar" id="appSidebar">
+  <a class="sidebar-brand" href="{% url 'dashboard:home' %}">
+    <img class="brand-logo" src="{% static 'images/logo.svg' %}" alt="TaskFlow logo" width="34" height="34">
+    <div class="brand-text">
+      <strong>{{ SITE_NAME }}</strong>
+      <span>{{ SITE_TAGLINE }}</span>
+    </div>
+  </a>
+  <nav class="sidebar-nav">
+    <div class="menu-label">Workspace</div>
+    <a class="nav-link-item {% if app_name == 'dashboard' and url_name != 'system_activity' %}active{% endif %}" href="{% url 'dashboard:home' %}" title="Overview"><i class="bi bi-grid-1x2"></i> <span>Overview</span></a>
+    <a class="nav-link-item {% if url_name == 'mine' %}active{% endif %}" href="{% url 'tasks:mine' %}" title="My Tasks"><i class="bi bi-check2-square"></i> <span>My Tasks</span></a>
+    <a class="nav-link-item {% if app_name == 'projects' %}active{% endif %}" href="{% url 'projects:list' %}" title="Projects"><i class="bi bi-folder2"></i> <span>Projects</span></a>
+    <a class="nav-link-item {% if url_name == 'kanban' and app_name == 'tasks' %}active{% endif %}" href="{% url 'tasks:kanban' %}" title="Kanban"><i class="bi bi-kanban"></i> <span>Kanban</span></a>
+    <a class="nav-link-item {% if url_name == 'calendar' %}active{% endif %}" href="{% url 'tasks:calendar' %}" title="Calendar"><i class="bi bi-calendar3"></i> <span>Calendar</span></a>
+    <a class="nav-link-item {% if url_name == 'documents' and app_name == 'tasks' %}active{% endif %}" href="{% url 'tasks:documents' %}" title="Documents"><i class="bi bi-file-earmark-text"></i> <span>Documents</span></a>
+    <a class="nav-link-item {% if app_name == 'reports' %}active{% endif %}" href="{% url 'reports:home' %}" title="Reports"><i class="bi bi-bar-chart-line"></i> <span>Reports</span></a>
+    <a class="nav-link-item {% if url_name == 'team' %}active{% endif %}" href="{% url 'accounts:team' %}" title="Team"><i class="bi bi-people"></i> <span>Team</span></a>
+    {% if show_own_department and user.role != 'ADMIN' and not user.is_superuser %}
+      <a class="nav-link-item {% if url_name == 'own_department' %}active{% endif %}" href="{% url 'accounts:own_department' %}" title="Phòng ban"><i class="bi bi-diagram-3" aria-hidden="true"></i> <span>Phòng ban</span></a>
+    {% endif %}
+    <a class="nav-link-item {% if app_name == 'notifications' %}active{% endif %}" href="{% url 'notifications:list' %}" title="Notifications">
+      <i class="bi bi-bell"></i> <span>Notifications</span>
+      {% if unread_notification_count %}<span class="nav-count">{{ unread_notification_count }}</span>{% endif %}
+    </a>
+    <a class="nav-link-item {% if url_name == 'settings' and app_name == 'accounts' %}active{% endif %}" href="{% url 'accounts:settings' %}" title="Settings"><i class="bi bi-gear"></i> <span>Settings</span></a>
+    {% if user.role == 'ADMIN' or user.is_superuser %}
+      <div class="menu-label">Admin</div>
+      <a class="nav-link-item {% if url_name == 'departments' or url_name == 'department_create' or url_name == 'department_edit' %}active{% endif %}" href="{% url 'accounts:departments' %}" title="Phòng ban"><i class="bi bi-diagram-3"></i> <span>Phòng ban</span></a>
+      <a class="nav-link-item {% if url_name == 'admin_users' or url_name == 'admin_user_create' or url_name == 'admin_user_edit' %}active{% endif %}" href="{% url 'accounts:admin_users' %}" title="Users"><i class="bi bi-person-gear"></i> <span>Users</span></a>
+      <a class="nav-link-item {% if url_name == 'system_activity' %}active{% endif %}" href="{% url 'dashboard:system_activity' %}" title="System Activity"><i class="bi bi-clock-history"></i> <span>System Activity</span></a>
+    {% endif %}
+  </nav>
+  <div class="sidebar-user">
+    {% user_avatar user 36 %}
+    <div class="user-meta">
+      <strong>{{ user.get_display_name }}</strong>
+      <span>{{ user.get_role_display }}</span>
+    </div>
+    <div class="dropdown">
+      <button class="btn btn-light btn-sm btn-icon" data-bs-toggle="dropdown" aria-label="Menu"><i class="bi bi-three-dots"></i></button>
+      <ul class="dropdown-menu dropdown-menu-end">
+        <li><a class="dropdown-item" href="{% url 'accounts:profile' %}"><i class="bi bi-person"></i> Hồ sơ</a></li>
+        <li><a class="dropdown-item" href="{% url 'accounts:settings' %}"><i class="bi bi-gear"></i> Cài đặt</a></li>
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item" href="{% url 'accounts:logout' %}"><i class="bi bi-box-arrow-right"></i> Đăng xuất</a></li>
+      </ul>
+    </div>
+  </div>
+</aside>
+{% endwith %}

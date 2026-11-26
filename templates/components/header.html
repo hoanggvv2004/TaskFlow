@@ -1,0 +1,62 @@
+{% load ui_tags %}
+<header class="topbar">
+  <div class="topbar-left flex-grow-1">
+    <button class="btn btn-light btn-icon" id="sidebarToggle" type="button" aria-label="Toggle sidebar"><i class="bi bi-layout-sidebar"></i></button>
+    <form class="search-box" action="{% url 'core:search' %}" method="get" autocomplete="off">
+      <i class="bi bi-search"></i>
+      <input id="globalSearch" name="q" value="{{ request.GET.q }}" placeholder="Tìm project, task, thành viên...">
+      <span class="search-kbd">/</span>
+      <div id="searchResults" class="search-dropdown"></div>
+    </form>
+  </div>
+  <div class="topbar-right">
+    {% if quick_projects %}
+    <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#createTaskModal"><i class="bi bi-plus-lg"></i> <span class="btn-text">Create Task</span></button>
+    {% endif %}
+    <button class="btn btn-light btn-icon" id="themeToggle" type="button" title="Dark mode"><i class="bi bi-moon"></i></button>
+    <div class="dropdown">
+      <button class="btn btn-light btn-icon notif-btn" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-label="Notifications">
+        <i class="bi bi-bell"></i>
+        <span id="notifBadge" class="notif-badge {% if not unread_notification_count %}is-empty{% endif %}">{{ unread_notification_count }}</span>
+      </button>
+      <div class="dropdown-menu dropdown-menu-end notif-menu">
+        <div class="notif-menu-head">
+          <strong>Thông báo</strong>
+          <button class="btn btn-link btn-sm p-0" type="button" data-mark-all-read>Mark all as read</button>
+        </div>
+        <div class="notif-list">
+          {% for item in header_notifications %}
+            <a class="notif-item {% if not item.is_read %}notif-unread{% endif %}" href="{{ item.url|default:'#' }}" data-mark-read="{{ item.id }}" data-url="{{ item.url|default:'#' }}">
+              <div class="notif-icon {{ item.type|notif_tone }}"><i class="bi {{ item.type|notif_icon }}"></i></div>
+              <div class="flex-grow-1 min-w-0">
+                <div class="title">{{ item.title }}</div>
+                <div class="msg">{{ item.message|truncatechars:90 }}</div>
+                <div class="time">{{ item.created_at|timesince }} trước</div>
+              </div>
+            </a>
+          {% empty %}
+            <div class="empty-state py-4"><div class="empty-icon" style="width:44px;height:44px;font-size:18px"><i class="bi bi-bell-slash"></i></div><p class="mb-0">Chưa có thông báo.</p></div>
+          {% endfor %}
+        </div>
+        <a class="notif-foot" href="{% url 'notifications:list' %}">Xem tất cả thông báo</a>
+      </div>
+    </div>
+    <div class="dropdown">
+      <button class="btn btn-light user-btn" data-bs-toggle="dropdown">
+        {% user_avatar user 28 %}
+        <i class="bi bi-chevron-down caret"></i>
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end">
+        <li class="px-3 py-2">
+          <div class="fw-600">{{ user.get_display_name }}</div>
+          <div class="text-muted fs-12">{{ user.email }}</div>
+        </li>
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item" href="{% url 'accounts:profile' %}"><i class="bi bi-person"></i> Hồ sơ</a></li>
+        <li><a class="dropdown-item" href="{% url 'accounts:settings' %}"><i class="bi bi-gear"></i> Cài đặt</a></li>
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item" href="{% url 'accounts:logout' %}"><i class="bi bi-box-arrow-right"></i> Đăng xuất</a></li>
+      </ul>
+    </div>
+  </div>
+</header>
