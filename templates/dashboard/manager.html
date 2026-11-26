@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+{% load ui_tags %}
+{% block title %}Overview{% endblock %}
+{% block content %}
+<section class="welcome">
+  <div>
+    <div class="date">{% now "l, d/m/Y" %}</div>
+    <h1>Chào {{ user.first_name|default:user.get_display_name }} 👋</h1>
+    <p>Bạn đang theo dõi {{ stats.total_projects }} dự án · {{ stats.overdue }} nhiệm vụ trễ hạn cần chú ý.</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-light" href="{% url 'reports:home' %}"><i class="bi bi-bar-chart-line"></i> Báo cáo</a>
+    {% if can_create_project %}
+    <a class="btn btn-primary" href="{% url 'projects:create' %}"><i class="bi bi-plus-lg"></i> Tạo dự án</a>
+    {% else %}
+    <a class="btn btn-primary" href="{% url 'tasks:kanban' %}"><i class="bi bi-kanban"></i> Kanban</a>
+    {% endif %}
+  </div>
+</section>
+
+{% if show_own_department %}
+<section class="tf-card mb-3">
+  <div class="tf-card-body d-flex flex-wrap align-items-center justify-content-between gap-2">
+    <div>
+      <div class="small text-muted"><i class="bi bi-diagram-3 me-1"></i>{% if is_department_head %}Phòng ban phụ trách{% else %}Phòng công tác{% endif %}</div>
+      <h2 class="h5 mb-0 mt-1">{{ user.department.name|default:"Chưa được gán phòng ban" }}</h2>
+    </div>
+    <a class="btn btn-outline-primary btn-sm" href="{% url 'accounts:own_department' %}">Xem phòng ban</a>
+  </div>
+</section>
+{% endif %}
+
+<div class="row g-3 mb-4" data-stagger>
+  <div class="col-6 col-xl-2">{% include "components/stat_card.html" with label="Total Projects" value=stats.total_projects icon="bi-folder2" tone="tone-primary" %}</div>
+  <div class="col-6 col-xl-2">{% include "components/stat_card.html" with label="Active Projects" value=stats.active_projects icon="bi-lightning-charge" tone="tone-info" %}</div>
+  <div class="col-6 col-xl-2">{% include "components/stat_card.html" with label="Total Tasks" value=stats.total_tasks icon="bi-check2-square" tone="tone-violet" %}</div>
+  <div class="col-6 col-xl-2">{% include "components/stat_card.html" with label="Completed" value=stats.completed_tasks icon="bi-check2-circle" tone="tone-success" %}</div>
+  <div class="col-6 col-xl-2">{% include "components/stat_card.html" with label="In Progress" value=stats.in_progress icon="bi-arrow-repeat" tone="tone-warning" %}</div>
+  <div class="col-6 col-xl-2"><a class="text-reset text-decoration-none" href="{% url 'reports:home' %}?focus=overdue">{% include "components/stat_card.html" with label="Quá hạn" value=stats.overdue icon="bi-exclamation-triangle" tone="tone-danger" %}</a></div>
+</div>
+
+<div class="row g-3" data-stagger>
+  <div class="col-lg-8">
+    <div class="tf-card h-100">
+      <div class="tf-card-head"><h2 class="section-title"><i class="bi bi-bar-chart"></i>Tasks by Status</h2><span class="section-sub">{{ stats.total_tasks }} nhiệm vụ</span></div>
+      <div class="tf-card-body"><div class="chart-box"><canvas id="s1"></canvas></div></div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="tf-card h-100">
+      <div class="tf-card-head"><h2 class="section-title"><i class="bi bi-pie-chart"></i>Tasks by Priority</h2></div>
+      <div class="tf-card-body"><div class="chart-box"><canvas id="s2"></canvas></div></div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="tf-card h-100">
+      <div class="tf-card-head"><h2 class="section-title"><i class="bi bi-graph-up-arrow"></i>Completed per week</h2><span class="section-sub">8 tuần gần nhất</span></div>
+      <div class="tf-card-body"><div class="chart-box sm"><canvas id="s3"></canvas></div></div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="tf-card h-100">
+      <div class="tf-card-head"><h2 class="section-title"><i class="bi bi-folder2"></i>Project Progress</h2><a class="fs-13" href="{% url 'projects:list' %}">Xem tất cả</a></div>
+      <div class="tf-card-body tight">
+        {% for row in project_progress %}
+          <div class="list-row">
+            <div class="grow">
+              <a class="title" href="{{ row.project.get_absolute_url }}">{{ row.project.name }}</a>
+              <div class="progress-row mt-1">
+                <div class="progress-thin {{ row.progress|progress_tone }}"><div data-width="{{ row.progress }}" style="width:0"></div></div>
+                <span class="pct">{{ row.progress }}%</span>
+              </div>
+            </div>
+            <span class="meta text-tabular">{{ row.stats.completed }}/{{ row.stats.total }}</span>
+          </div>
+        {% empty %}
+          <p class="text-muted py-3 mb-0">Chưa có dự án.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="tf-card h-100">
+      <div class="tf-card-head"><h2 class="section-title"><i class="bi bi-person-check"></i>My tasks</h2><a class="fs-13" href="{% url 'tasks:mine' %}">Xem tất cả</a></div>
+      <div class="tf-card-body tight">
+        {% for t in my_tasks|slice:":6" %}
+          <a class="list-row hoverable" href="{{ t.get_absolute_url }}">
+            <span class="dot" style="background:{% if t.is_overdue %}var(--danger){% elif t.is_completed %}var(--success){% else %}var(--primary){% endif %}"></span>
+            <div class="grow">
+              <span class="title">{{ t.title }}</span>
+              <span class="meta">{{ t.code }} · {{ t.project.name }}</span>
+            </div>
+            <span class="{{ t.status.stage|badge_class }}">{{ t.status.name }}</span>
+          </a>
+        {% empty %}
+          <p class="text-muted py-3 mb-0">Bạn chưa được giao nhiệm vụ nào.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="tf-card h-100">
+      <div class="tf-card-head"><h2 class="section-title"><i class="bi bi-calendar-event"></i>Upcoming deadlines</h2><a class="fs-13" href="{% url 'tasks:calendar' %}">Lịch</a></div>
+      <div class="tf-card-body tight">
+        {% for t in upcoming %}
+          <a class="list-row hoverable" href="{{ t.get_absolute_url }}">
+            <div class="text-center" style="width:40px">
+              <div class="fw-600 text-tabular" style="font-size:16px;line-height:1">{{ t.due_date|date:"d" }}</div>
+              <div class="fs-12 text-muted">Th{{ t.due_date|date:"n" }}</div>
+            </div>
+            <div class="grow">
+              <span class="title">{{ t.title }}</span>
+              <span class="meta">{{ t.project.name }}</span>
+            </div>
+            {% if t.is_overdue %}<span class="badge-danger">Overdue</span>{% elif t.is_due_soon %}<span class="badge-medium">Due soon</span>{% else %}<span class="{{ t.priority.slug|badge_class }}">{{ t.priority.name }}</span>{% endif %}
+          </a>
+        {% empty %}
+          <p class="text-muted py-3 mb-0">Không có deadline sắp tới.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="tf-card h-100">
+      <div class="tf-card-head"><h2 class="section-title"><i class="bi bi-people"></i>Team workload</h2><span class="section-sub">Task đang mở theo thành viên</span></div>
+      <div class="tf-card-body">
+        <div class="chart-box sm mb-3"><canvas id="s5"></canvas></div>
+        <div class="row g-2">
+          {% for row in workload %}
+            <div class="col-md-6">
+              <div class="list-row">
+                {% user_avatar row.user 30 %}
+                <div class="grow">
+                  <span class="title">{{ row.user.get_display_name }}</span>
+                  <span class="meta">{{ row.active }} tasks · {{ row.hours|floatformat:0 }}h ước tính</span>
+                </div>
+                <span class="wl-pill {{ row.label|workload_class }}">{{ row.label }}</span>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-5">
+    <div class="tf-card h-100">
+      <div class="tf-card-head"><h2 class="section-title"><i class="bi bi-activity"></i>Recent activity</h2><a class="fs-13" href="{% url 'activity:list' %}">Tất cả</a></div>
+      <div class="tf-card-body">
+        <div class="timeline">
+          {% for log in recent_activity %}
+            <div class="timeline-item">
+              <div class="time">{{ log.created_at|date:"H:i · d/m" }}</div>
+              <div class="text">{{ log.description }}</div>
+            </div>
+          {% empty %}<p class="text-muted mb-0">Chưa có hoạt động.</p>{% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+(function () {
+  const tf = window.taskflow;
+  const status = {{ status_chart_json|safe }};
+  const prio = {{ priority_chart_json|safe }};
+  const weeks = {{ completed_week_json|safe }};
+  const workload = {{ workload_json|safe }};
+  const order = ["todo", "in-progress", "review", "completed", "blocked"];
+  const sKeys = order.filter((k) => k in status).concat(Object.keys(status).filter((k) => !order.includes(k)));
+  const pOrder = ["low", "medium", "high", "urgent"];
+  const pKeys = pOrder.filter((k) => k in prio);
+
+  new Chart(document.getElementById("s1"), {
+    type: "bar",
+    data: { labels: sKeys.map(tf.labelFor), datasets: [{ data: sKeys.map((k) => status[k]), backgroundColor: sKeys.map((k) => tf.statusColors[k] || "#9CA3AF"), maxBarThickness: 46 }] },
+    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } }, x: { grid: { display: false } } } },
+  });
+  new Chart(document.getElementById("s2"), {
+    type: "doughnut",
+    data: { labels: pKeys.map(tf.labelFor), datasets: [{ data: pKeys.map((k) => prio[k]), backgroundColor: pKeys.map((k) => tf.priorityColors[k]), borderWidth: 0, hoverOffset: 6 }] },
+    options: { cutout: "68%" },
+  });
+  new Chart(document.getElementById("s3"), {
+    type: "line",
+    data: { labels: weeks.map((i) => i.label), datasets: [{ data: weeks.map((i) => i.value), borderColor: "#5B6CFF", backgroundColor: "rgba(91,108,255,.12)", fill: true, pointBackgroundColor: "#5B6CFF" }] },
+    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } }, x: { grid: { display: false } } } },
+  });
+  new Chart(document.getElementById("s5"), {
+    type: "bar",
+    data: { labels: workload.map((i) => i.label), datasets: [{ label: "Active tasks", data: workload.map((i) => i.value), backgroundColor: workload.map((i) => (i.value >= 10 ? "#F87171" : i.value >= 7 ? "#FBBF24" : "#5B6CFF")), maxBarThickness: 28 }] },
+    options: { indexAxis: "y", plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, ticks: { precision: 0 } }, y: { grid: { display: false } } } },
+  });
+})();
+</script>
+{% endblock %}

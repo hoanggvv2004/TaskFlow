@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% load ui_tags %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block content %}
+<section class="welcome">
+  <div>
+    <div class="date">{% now "l, d/m/Y" %}</div>
+    <h1>Tổng quan hệ thống</h1>
+    <p>{{ metrics.total_users }} người dùng · {{ metrics.total_projects }} dự án · {{ metrics.total_tasks }} nhiệm vụ đang được quản lý trên {{ SITE_NAME }}.</p>
+  </div>
+  <div class="page-actions">
+    <a class="btn btn-light" href="{% url 'dashboard:system_activity' %}"><i class="bi bi-clock-history"></i> System Activity</a>
+    <a class="btn btn-primary" href="{% url 'accounts:admin_user_create' %}"><i class="bi bi-person-plus"></i> Thêm người dùng</a>
+  </div>
+</section>
+
+<div class="row g-3 mb-3" data-stagger>
+  <div class="col-6 col-xl-2">{% include "components/stat_card.html" with label="Tổng người dùng" value=metrics.total_users icon="bi-people" tone="tone-primary" %}</div>
+  <div class="col-6 col-xl-2">{% include "components/stat_card.html" with label="Người dùng mới" value=metrics.new_users icon="bi-person-plus" tone="tone-info" hint="30 ngày gần nhất" %}</div>
+  <div class="col-6 col-xl-2">{% include "components/stat_card.html" with label="Tổng dự án" value=metrics.total_projects icon="bi-folder2" tone="tone-violet" %}</div>
+  <div class="col-6 col-xl-2">{% include "components/stat_card.html" with label="Dự án active" value=metrics.active_projects icon="bi-lightning-charge" tone="tone-warning" %}</div>
+  <div class="col-6 col-xl-2">{% include "components/stat_card.html" with label="Dự án hoàn thành" value=metrics.completed_projects icon="bi-flag" tone="tone-success" %}</div>
+  <div class="col-6 col-xl-2">{% include "components/stat_card.html" with label="Tổng nhiệm vụ" value=metrics.total_tasks icon="bi-check2-square" tone="tone-muted" %}</div>
+</div>
+<div class="row g-3 mb-4" data-stagger>
+  <div class="col-6 col-xl">{% include "components/stat_card.html" with label="To-do" value=metrics.todo icon="bi-circle" tone="tone-muted" %}</div>
+  <div class="col-6 col-xl">{% include "components/stat_card.html" with label="In Progress" value=metrics.in_progress icon="bi-arrow-repeat" tone="tone-primary" %}</div>
+  <div class="col-6 col-xl">{% include "components/stat_card.html" with label="Review" value=metrics.review icon="bi-eye" tone="tone-warning" %}</div>
+  <div class="col-6 col-xl">{% include "components/stat_card.html" with label="Completed" value=metrics.completed icon="bi-check2-circle" tone="tone-success" %}</div>
+  <div class="col-6 col-xl">{% include "components/stat_card.html" with label="Trễ hạn" value=metrics.overdue icon="bi-exclamation-triangle" tone="tone-danger" %}</div>
+</div>
+
+<div class="row g-3" data-stagger>
+  <div class="col-lg-4">
+    <div class="tf-card h-100"><div class="tf-card-head"><h2 class="section-title"><i class="bi bi-pie-chart"></i>Dự án theo trạng thái</h2></div>
+    <div class="tf-card-body"><div class="chart-box"><canvas id="c1"></canvas></div></div></div>
+  </div>
+  <div class="col-lg-8">
+    <div class="tf-card h-100"><div class="tf-card-head"><h2 class="section-title"><i class="bi bi-bar-chart"></i>Nhiệm vụ theo trạng thái</h2></div>
+    <div class="tf-card-body"><div class="chart-box"><canvas id="c2"></canvas></div></div></div>
+  </div>
+  <div class="col-lg-4">
+    <div class="tf-card h-100"><div class="tf-card-head"><h2 class="section-title"><i class="bi bi-pie-chart-fill"></i>Nhiệm vụ theo ưu tiên</h2></div>
+    <div class="tf-card-body"><div class="chart-box sm"><canvas id="c3"></canvas></div></div></div>
+  </div>
+  <div class="col-lg-8">
+    <div class="tf-card h-100"><div class="tf-card-head"><h2 class="section-title"><i class="bi bi-graph-up-arrow"></i>Công việc hoàn thành theo tháng</h2><span class="section-sub">6 tháng gần nhất</span></div>
+    <div class="tf-card-body"><div class="chart-box sm"><canvas id="c4"></canvas></div></div></div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="tf-card h-100">
+      <div class="tf-card-head"><h2 class="section-title"><i class="bi bi-trophy"></i>Top thành viên</h2><span class="section-sub">theo số task</span></div>
+      <div class="tf-card-body tight">
+        {% for u in metrics.top_members %}
+          <a class="list-row hoverable" href="{{ u.get_absolute_url }}">
+            <span class="rank">{{ forloop.counter }}</span>
+            {% user_avatar u 30 %}
+            <div class="grow"><span class="title">{{ u.get_display_name }}</span><span class="meta">{{ u.job_title|default:u.get_role_display }}</span></div>
+            <strong class="text-tabular">{{ u.task_total }}</strong>
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="tf-card h-100">
+      <div class="tf-card-head"><h2 class="section-title"><i class="bi bi-folder2"></i>Top dự án</h2><span class="section-sub">theo số task</span></div>
+      <div class="tf-card-body tight">
+        {% for p in metrics.top_projects %}
+          <a class="list-row hoverable" href="{{ p.get_absolute_url }}">
+            <span class="rank">{{ forloop.counter }}</span>
+            <div class="grow"><span class="title">{{ p.name }}</span><span class="meta">{{ p.code }} · {{ p.owner.get_display_name }}</span></div>
+            <strong class="text-tabular">{{ p.task_total }}</strong>
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="tf-card h-100">
+      <div class="tf-card-head"><h2 class="section-title"><i class="bi bi-activity"></i>Hoạt động gần đây</h2><a class="fs-13" href="{% url 'dashboard:system_activity' %}">Tất cả</a></div>
+      <div class="tf-card-body">
+        <div class="timeline">
+          {% for log in metrics.recent_activity %}
+            <div class="timeline-item"><div class="time">{{ log.created_at|date:"H:i · d/m" }}</div><div class="text">{{ log.description }}</div></div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+(function () {
+  const tf = window.taskflow;
+  const status = {{ metrics.task_status_chart|safe }};
+  const prio = {{ metrics.task_priority_chart|safe }};
+  const months = {{ metrics.completed_month|safe }};
+  const projects = {{ metrics.project_status_chart|safe }};
+  const order = ["todo", "in-progress", "review", "completed", "blocked"];
+  const sKeys = order.filter((k) => k in status);
+  const pKeys = ["low", "medium", "high", "urgent"].filter((k) => k in prio);
+  const projColors = { Planning: "#9CA3AF", Active: "#5B6CFF", "On Hold": "#F59E0B", Completed: "#10B981", Cancelled: "#EF4444" };
+
+  new Chart(document.getElementById("c1"), {
+    type: "doughnut",
+    data: { labels: projects.map((i) => i.current_status_name), datasets: [{ data: projects.map((i) => i.total), backgroundColor: projects.map((i) => projColors[i.current_status_name] || "#9CA3AF"), borderWidth: 0, hoverOffset: 6 }] },
+    options: { cutout: "68%" },
+  });
+  new Chart(document.getElementById("c2"), {
+    type: "bar",
+    data: { labels: sKeys.map(tf.labelFor), datasets: [{ data: sKeys.map((k) => status[k]), backgroundColor: sKeys.map((k) => tf.statusColors[k]), maxBarThickness: 46 }] },
+    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } }, x: { grid: { display: false } } } },
+  });
+  new Chart(document.getElementById("c3"), {
+    type: "doughnut",
+    data: { labels: pKeys.map(tf.labelFor), datasets: [{ data: pKeys.map((k) => prio[k]), backgroundColor: pKeys.map((k) => tf.priorityColors[k]), borderWidth: 0, hoverOffset: 6 }] },
+    options: { cutout: "68%" },
+  });
+  new Chart(document.getElementById("c4"), {
+    type: "line",
+    data: { labels: months.map((i) => i.label), datasets: [{ data: months.map((i) => i.value), borderColor: "#6366F1", backgroundColor: "rgba(99,102,241,.12)", fill: true, pointBackgroundColor: "#6366F1" }] },
+    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { precision: 0 } }, x: { grid: { display: false } } } },
+  });
+})();
+</script>
+{% endblock %}
